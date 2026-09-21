@@ -13,20 +13,23 @@ Abra `http://localhost:8000`. Os dados são gravados automaticamente no
 `localStorage` do navegador. Use **Configurações > Exportar banco** para manter
 uma cópia de segurança.
 
-## Integração com o banco Orizon
+## Vincular um banco
 
-Em **Configurações > Banco de dados Orizon**, informe a URL de um endpoint e,
-se necessário, um bearer token. O endpoint deve aceitar:
+Em **Configurações > Banco de dados vinculado**, escolha uma das opções:
 
-- `GET`: retorna um objeto JSON com, no mínimo, a propriedade `tasks` como lista;
-- `PUT`: recebe no corpo o banco completo do Persona em JSON;
-- cabeçalhos `Content-Type: application/json` e `Authorization: Bearer <token>`
-  (quando um token for informado).
+- **Vincular banco existente** abre um arquivo JSON já utilizado pelo Persona;
+- **Criar novo banco** cria um arquivo JSON e passa a usá-lo imediatamente;
+- **Reabrir / atualizar** lê novamente o conteúdo do arquivo vinculado;
+- **Desvincular** deixa de atualizar o arquivo, mas preserva os dados locais.
 
-O botão **Testar** valida o acesso sem substituir dados. **Receber do Orizon**
-substitui o banco local pelo conteúdo remoto, enquanto **Enviar ao Orizon**
-publica o estado local. Configure CORS no serviço para a origem em que o Persona
-estiver hospedado. A URL e o token ficam armazenados apenas no navegador atual.
+Depois de vinculado, cada alteração feita no Persona é gravada automaticamente
+no arquivo escolhido, sem API, servidor ou configuração de rede. Uma cópia
+também continua no `localStorage` para permitir a abertura rápida do aplicativo.
+
+Esse recurso utiliza a File System Access API, disponível no Chrome e no Edge.
+Por segurança, o navegador pode solicitar novamente a permissão para acessar o
+arquivo depois de ser fechado. O vínculo é guardado no IndexedDB do próprio
+navegador e o arquivo nunca é enviado a um serviço externo.
 
 ## Atalhos e recursos
 
