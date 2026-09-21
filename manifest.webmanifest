@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "Orizon Persona",
+  "short_name": "Persona",
+  "description": "Controle pessoal de demandas, projetos e calendário.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f4f6",
+  "theme_color": "#111920",
+  "icons": [
+    {
+      "src": "icons/persona.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/persona-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

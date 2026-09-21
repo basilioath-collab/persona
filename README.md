@@ -13,6 +13,19 @@ Abra `http://localhost:8000`. Os dados são gravados automaticamente no
 `localStorage` do navegador. Use **Configurações > Exportar banco** para manter
 uma cópia de segurança.
 
+## Instalar no computador
+
+Abra o Persona pelo Chrome ou Edge e clique em **Instalar no PC**, no topo da
+tela. Confirme a instalação apresentada pelo navegador. O Persona será aberto
+como um aplicativo independente e poderá criar um atalho na área de trabalho,
+no menu Iniciar ou na barra de tarefas, conforme as opções do sistema.
+
+Se o navegador ainda não apresentar a confirmação automática, abra o menu `⋮`
+e escolha **Instalar Orizon Persona**. A instalação exige que a página seja
+servida por HTTPS ou por `localhost`; abrir o arquivo `index.html` diretamente
+não habilita a instalação. Depois do primeiro carregamento, o aplicativo também
+pode abrir sem conexão graças ao cache local.
+
 ## Vincular um banco
 
 Em **Configurações > Banco de dados vinculado**, escolha uma das opções:
