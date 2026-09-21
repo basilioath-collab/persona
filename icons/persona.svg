@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Orizon Persona">
+  <rect width="512" height="512" rx="112" fill="#111920"/>
+  <circle cx="256" cy="256" r="180" fill="#182129" stroke="#9aa6af" stroke-width="28"/>
+  <text x="256" y="296" fill="#9bf12f" font-family="Arial, sans-serif" font-size="142" font-weight="800" letter-spacing="-8" text-anchor="middle">OP</text>
+</svg>
