@@ -48,7 +48,7 @@ navegador e o arquivo nunca é enviado a um serviço externo.
 
 - `N`: abre o cadastro de uma nova demanda;
 - **Adicionar várias** cria demandas em lote, uma para cada linha informada;
-- cada demanda aceita um checklist de ações necessárias e uma anotação destacada por cor;
+- cada demanda aceita um checklist de ações necessárias e várias anotações, cada uma com sua própria cor;
 - `Ctrl/Cmd + K`: leva o foco para a pesquisa;
 - clique em um dia do calendário para abrir o cadastro com o vencimento pronto;
 - o menu lateral pode ser recolhido no desktop e mantém a preferência;
