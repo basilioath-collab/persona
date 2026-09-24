@@ -47,6 +47,7 @@ navegador e o arquivo nunca é enviado a um serviço externo.
 ## Atalhos e recursos
 
 - `N`: abre o cadastro de uma nova demanda;
+- `C`: abre a captura rápida;
 - **Capturar** envia lembretes rápidos para a Inbox, onde podem virar demandas;
 - **Adicionar várias** cria demandas em lote, uma para cada linha informada;
 - cada demanda aceita um checklist de ações necessárias e várias anotações, cada uma com sua própria cor;
