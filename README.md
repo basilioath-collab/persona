@@ -56,7 +56,9 @@ navegador e o arquivo nunca é enviado a um serviço externo.
 - o indicador de capacidade alerta quando o dia está sobrecarregado;
 - **Encerrar o dia** move as ações pendentes para amanhã;
 - em **Projetos**, clique em um cartão para abrir o overview das demandas;
-- bloqueios têm motivo obrigatório e podem ser resolvidos com um clique;
+- bloqueios registram motivo, responsável, próxima cobrança e ação para destravar;
+- o calendário combina vencimentos e ações planejadas;
+- **Revisão semanal** resume execução, entregas e impedimentos dos últimos sete dias;
 - `Ctrl/Cmd + K`: leva o foco para a pesquisa;
 - clique em um dia do calendário para abrir o cadastro com o vencimento pronto;
 - o menu lateral pode ser recolhido no desktop e mantém a preferência;
