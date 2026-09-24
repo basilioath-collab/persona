@@ -1,7 +1,7 @@
 # Orizon Persona
 
 Aplicativo pessoal, executado diretamente no navegador, para organizar demandas,
-projetos, recorrências, calendário e apontamentos de tempo.
+projetos, recorrências, calendário, checklists, anotações coloridas e apontamentos de tempo.
 
 ## Executar
 
@@ -47,6 +47,18 @@ navegador e o arquivo nunca é enviado a um serviço externo.
 ## Atalhos e recursos
 
 - `N`: abre o cadastro de uma nova demanda;
+- `C`: abre a captura rápida;
+- **Capturar** envia lembretes rápidos para a Inbox, onde podem virar demandas;
+- **Adicionar várias** cria demandas em lote, uma para cada linha informada;
+- cada demanda aceita um checklist de ações necessárias e várias anotações, cada uma com sua própria cor;
+- **Demandas** alterna entre Lista, Kanban e visão por Prioridades;
+- **Hoje** e **Amanhã** permitem montar planos por Manhã, Tarde ou Se sobrar tempo, com duração e vínculo à demanda;
+- o indicador de capacidade alerta quando o dia está sobrecarregado;
+- **Encerrar o dia** move as ações pendentes para amanhã;
+- em **Projetos**, clique em um cartão para abrir o overview das demandas;
+- bloqueios registram motivo, responsável, próxima cobrança e ação para destravar;
+- o calendário combina vencimentos e ações planejadas;
+- **Revisão semanal** resume execução, entregas e impedimentos dos últimos sete dias;
 - `Ctrl/Cmd + K`: leva o foco para a pesquisa;
 - clique em um dia do calendário para abrir o cadastro com o vencimento pronto;
 - o menu lateral pode ser recolhido no desktop e mantém a preferência;
