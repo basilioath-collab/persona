@@ -1,4 +1,4 @@
-const CACHE_NAME = 'orizon-persona-v11';
+const CACHE_NAME = 'orizon-persona-v12';
 const APP_SHELL = [
   './',
   './index.html',
