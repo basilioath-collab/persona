@@ -37,6 +37,16 @@ assinatura configurado, portanto o Windows pode apresentar SmartScreen.
 - Use **Hoje na área de trabalho**, no topo, para abrir o painel compacto.
   Ele é uma segunda visualização **do mesmo aplicativo**, não uma instalação ou
   processo independente. Não permite editar atividades.
+- O painel é translúcido: por padrão, fica com **35% de opacidade** sem o mouse
+  e **97%** ao passar o cursor sobre ele. Ao retirar o mouse, volta a ficar
+  discreto, com transição suave. O foco por teclado também aumenta a visibilidade;
+  a preferência de reduzir animações é respeitada.
+- Segure o botão esquerdo sobre o **cabeçalho PERSONA** e arraste para qualquer
+  posição, inclusive no meio da tela ou em outro monitor. Os botões continuam
+  funcionando sem iniciar arrasto. A posição fica salva. Na primeira abertura
+  sem posição salva, o painel começa centralizado.
+- Em **Ajustes → Opacidade sem o mouse**, escolha de **15% a 75%** e clique em
+  **Salvar ajustes**. O percentual escolhido é lembrado ao reabrir o aplicativo.
 - No painel, **Abrir Persona** traz de volta a janela principal na tela Hoje;
   não abre um endereço no navegador. Em **Ajustes**, configure horário local do
   resumo, Sempre no topo e Iniciar com o Windows.
@@ -109,7 +119,7 @@ npm run desktop:build -- --bundles nsis
 Saída: `companion/src-tauri/target/release/bundle/nsis/*-setup.exe`.
 O workflow [Windows Persona installer](../.github/workflows/windows-companion.yml)
 executa os testes JS/Rust e gera esse instalador. Para distribuí-lo por link,
-crie uma Release com uma tag como `persona-v0.2.0`, anexe **somente o instalador**
+crie uma Release com uma tag como `persona-v0.2.1`, anexe **somente o instalador**
 do artefato da mesma revisão e publique. Ele ficará em **Releases → Assets**.
 O workflow não publica Releases automaticamente.
 
@@ -138,7 +148,9 @@ a entrega de notificações ou o comportamento de janelas reais no Windows.
    confira o JSON e o overlay. Saia e abra novamente: os dados devem persistir.
 2. Feche a janela principal. Confira o painel e reabra o Persona por ele ou pela
    bandeja, sem abrir o navegador. Teste recolher, arrastar, Sempre no topo e as
-   posições após reiniciar. Abrir o atalho duas vezes não deve duplicar a instância.
+   posições após reiniciar. Confira se o desktop aparece através do painel,
+   se o cursor o torna mais forte e se a opacidade escolhida volta após reiniciar.
+   Teste também arrastar para outro monitor. Abrir o atalho duas vezes não deve duplicar a instância.
 3. Em uma cópia de teste, escreva temporariamente `{`, restaure o conteúdo e
    depois renomeie o arquivo. Confira aviso, retenção e recuperação. Edite o JSON
    externamente com uma alteração local pendente: o editor deve recusar a gravação

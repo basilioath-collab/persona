@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{collections::BTreeSet, fs, path::Path};
 
-#[derive(Default, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Preferences {
     pub database: Option<String>,
@@ -11,10 +11,28 @@ pub struct Preferences {
     pub summary_enabled: bool,
     pub always_on_top: bool,
     pub collapsed: bool,
+    pub idle_opacity: u8,
     pub delivered_days: BTreeSet<String>,
+}
+impl Default for Preferences {
+    fn default() -> Self {
+        Self {
+            database: None,
+            persona_url: String::new(),
+            summary_time: "08:30".into(),
+            summary_enabled: false,
+            always_on_top: false,
+            collapsed: false,
+            idle_opacity: 35,
+            delivered_days: BTreeSet::new(),
+        }
+    }
 }
 impl Preferences {
     pub fn validate(&self) -> Result<(), String> {
+        if !(15..=75).contains(&self.idle_opacity) {
+            return Err("A opacidade deve ficar entre 15% e 75%".into());
+        }
         if !valid_time(&self.summary_time) {
             return Err("Use um horário HH:MM válido".into());
         }
@@ -174,6 +192,22 @@ mod tests {
     use super::*;
     fn fixture() -> Value {
         serde_json::from_str(include_str!("../../../tests/fixtures/today.json")).unwrap()
+    }
+    #[test]
+    fn opacity_migrates_and_validates_persisted_settings() {
+        let mut prefs: Preferences =
+            serde_json::from_str(r#"{"summaryTime":"08:30","collapsed":true}"#).unwrap();
+        assert_eq!(prefs.idle_opacity, 35);
+        assert!(prefs.collapsed);
+        assert!(prefs.validate().is_ok());
+        prefs.idle_opacity = 50;
+        let restored: Preferences =
+            serde_json::from_str(&serde_json::to_string(&prefs).unwrap()).unwrap();
+        assert_eq!(restored.idle_opacity, 50);
+        prefs.idle_opacity = 0;
+        assert!(prefs.validate().is_err());
+        prefs.idle_opacity = 100;
+        assert!(prefs.validate().is_err());
     }
     #[test]
     fn same_plan_membership_and_independent_completion() {

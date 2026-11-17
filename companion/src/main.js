@@ -5,8 +5,14 @@ const native = window.__TAURI__;
 let prefs, lastData, lastDay, collapsed = false, expandedHeight = 560, polling = false;
 function error(err) { $('error').textContent = String(err); }
 const invoke = (cmd, args) => native.core.invoke(cmd, args);
+function previewOpacity(value) {
+  const percent = Math.max(15, Math.min(75, Number(value) || 35));
+  document.body.style.setProperty('--idle-opacity', String(percent / 100));
+  $('opacityValue').textContent = `${percent}%`;
+}
 function fill(p) {
   prefs = p; collapsed = p.collapsed;
+  $('idleOpacity').value = p.idleOpacity ?? 35; previewOpacity($('idleOpacity').value);
   $('time').value = p.summaryTime;
   $('summary').checked = p.summaryEnabled; $('top').checked = p.alwaysOnTop;
   $('file').textContent = p.database || 'Nenhum arquivo selecionado';
@@ -34,7 +40,7 @@ async function refresh() {
 async function save(overrides = {}) {
   await invoke('configure', {
     personaUrl: '', summaryTime: $('time').value,
-    summaryEnabled: $('summary').checked, alwaysOnTop: $('top').checked, collapsed, ...overrides,
+    idleOpacity: Number($('idleOpacity').value), summaryEnabled: $('summary').checked, alwaysOnTop: $('top').checked, collapsed, ...overrides,
   });
   prefs = (await invoke('status')).preferences;
   await native.window.getCurrentWindow().setAlwaysOnTop(prefs.alwaysOnTop);
@@ -50,7 +56,13 @@ async function toggleCollapse() {
   await win.setSize(new native.dpi.LogicalSize(360, collapsed ? 110 : expandedHeight));
 }
 function action(id, fn) { $(id).onclick = async () => { try { $('error').textContent = ''; await fn(); } catch (err) { error(err); } }; }
+$('idleOpacity').oninput = () => previewOpacity($('idleOpacity').value);
 if (native) {
+  $('dragRegion').addEventListener('mousedown', event => {
+    if (event.button !== 0 || event.target.closest('button')) return;
+    event.preventDefault();
+    native.window.getCurrentWindow().startDragging().catch(error);
+  });
   action('select', async () => { await invoke('select_database'); fill((await invoke('status')).preferences); await refresh(); });
   action('open', () => invoke('open_persona'));
   action('hide', () => native.window.getCurrentWindow().hide());

@@ -66,6 +66,7 @@ fn configure(
     summary_enabled: bool,
     always_on_top: bool,
     collapsed: bool,
+    idle_opacity: u8,
 ) -> Result<(), String> {
     if !persona_url.is_empty() {
         let url = tauri::Url::parse(&persona_url).map_err(|_| "URL inválida")?;
@@ -84,6 +85,7 @@ fn configure(
     prefs.summary_enabled = summary_enabled;
     prefs.always_on_top = always_on_top;
     prefs.collapsed = collapsed;
+    prefs.idle_opacity = idle_opacity;
     prefs.validate()?;
     save_preferences(&state.config, &prefs)?;
     rt.prefs = prefs;

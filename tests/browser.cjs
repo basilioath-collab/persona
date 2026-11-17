@@ -31,13 +31,15 @@ async function ready(url) {
     overlay.on('pageerror',e=>errors.push(e.message));
     await overlay.addInitScript(db => {
       window.mock = {preferences:{database:'synthetic.json',personaUrl:'https://example.com',summaryTime:'08:30',summaryEnabled:true,alwaysOnTop:false,collapsed:false},snapshot:{data:db,connection:'connected'},alertError:null};
-      window.calls=[];
+      const saved=localStorage.getItem('overlay-test-preferences');
+      if(saved)Object.assign(window.mock.preferences,JSON.parse(saved));
+      window.dragCount=0; window.calls=[];
       window.__TAURI__={core:{invoke:async(cmd,args)=>{
         window.calls.push(cmd);
         if(cmd==='status') return structuredClone(window.mock);
-        if(cmd==='configure') Object.assign(window.mock.preferences,args);
+        if(cmd==='configure') {Object.assign(window.mock.preferences,args);localStorage.setItem('overlay-test-preferences',JSON.stringify(window.mock.preferences));}
         if(cmd==='plugin:autostart|is_enabled') return false;
-      }},window:{getCurrentWindow:()=>({hide:async()=>{},setAlwaysOnTop:async()=>{},setSize:async()=>{},innerSize:async()=>({height:560}),scaleFactor:async()=>1})},dpi:{LogicalSize:class{}}};
+      }},window:{getCurrentWindow:()=>({startDragging:async()=>{window.dragCount++},hide:async()=>{},setAlwaysOnTop:async()=>{},setSize:async()=>{},innerSize:async()=>({height:560}),scaleFactor:async()=>1})},dpi:{LogicalSize:class{}}};
     }, fixture);
     await overlay.goto('http://127.0.0.1:1421');
     await overlay.waitForSelector('.item');
@@ -45,6 +47,37 @@ async function ready(url) {
     assert.deepEqual(overlayPlan, webPlan);
     await overlay.setViewportSize({width:360,height:560});
     if (process.env.PERSONA_SCREENSHOT) await overlay.screenshot({path:process.env.PERSONA_SCREENSHOT});
+    // True transparent canvas plus low idle opacity, hover/focus emphasis and drag IPC.
+    const config=require('../companion/src-tauri/tauri.conf.json');
+    assert.equal(config.app.windows.find(w=>w.label==='main').transparent,true);
+    assert.notEqual(config.app.windows.find(w=>w.label==='persona').transparent,true);
+    assert.equal(await overlay.evaluate(()=>getComputedStyle(document.documentElement).backgroundColor),'rgba(0, 0, 0, 0)');
+    assert.equal(await overlay.evaluate(()=>getComputedStyle(document.body).backgroundColor),'rgba(0, 0, 0, 0)');
+    await overlay.mouse.move(-10,-10);
+    await overlay.waitForFunction(()=>Math.abs(+getComputedStyle(document.body).opacity-.35)<.01);
+    if(process.env.PERSONA_SCREENSHOT)await overlay.screenshot({path:process.env.PERSONA_SCREENSHOT+'.idle.png',omitBackground:true});
+    await overlay.locator('#dragRegion .brand').hover();
+    await overlay.waitForFunction(()=>Math.abs(+getComputedStyle(document.body).opacity-.97)<.01);
+    if(process.env.PERSONA_SCREENSHOT)await overlay.screenshot({path:process.env.PERSONA_SCREENSHOT+'.hover.png',omitBackground:true});
+    await overlay.mouse.down(); await overlay.mouse.up();
+    assert.equal(await overlay.evaluate(()=>window.dragCount),1);
+    await overlay.locator('#settingsToggle').click();
+    await overlay.locator('#idleOpacity').focus(); await overlay.locator('#idleOpacity').press('ArrowRight');
+    assert.equal(await overlay.locator('#opacityValue').textContent(),'40%');
+    await overlay.locator('#save').click();
+    assert.equal(await overlay.evaluate(()=>window.mock.preferences.idleOpacity),40);
+    assert.equal(await overlay.evaluate(()=>window.dragCount),1); // Buttons do not drag the window.
+    await overlay.mouse.move(-10,-10);
+    await overlay.waitForFunction(()=>Math.abs(+getComputedStyle(document.body).opacity-.4)<.01);
+    await overlay.reload(); await overlay.waitForSelector('.item');
+    await overlay.mouse.move(-10,-10);
+    await overlay.waitForFunction(()=>Math.abs(+getComputedStyle(document.body).opacity-.4)<.01);
+    assert.equal(await overlay.locator('#idleOpacity').inputValue(),'40');
+    await overlay.keyboard.press('Tab');
+    await overlay.waitForFunction(()=>Math.abs(+getComputedStyle(document.body).opacity-.97)<.01);
+    await overlay.evaluate(()=>document.activeElement.blur());
+    await overlay.waitForFunction(()=>Math.abs(+getComputedStyle(document.body).opacity-.4)<.01);
+
     // Exercise a real web edit and completion, then feed the saved JSON to the read-only overlay.
     await web.locator('[data-view="tasks"]').click();
     await web.locator('#view-tasks [data-id="a"] [data-action="edit"]').first().click();
@@ -138,6 +171,6 @@ async function ready(url) {
     await web.waitForFunction(()=>!!navigator.serviceWorker.controller);
     await context.setOffline(true); await web.reload(); await web.waitForSelector('.day-plan');
     assert.equal(errors.length,0,errors.join('\n'));
-    console.log('PASS: full native editor bridge (create/complete/external update/recovery), web/overlay parity, collapse/open commands and PWA offline shell. Native tray/notifications require Windows.');
+    console.log('PASS: transparent hover/idle overlay, drag IPC, opacity persistence/keyboard focus, full native editor bridge (create/complete/external update/recovery), web/overlay parity, collapse/open commands and PWA offline shell. Native tray/notifications require Windows.');
   } finally { if(browser) await browser.close(); for(const s of servers) s.kill(); }
 })().catch(e=>{console.error(e);process.exitCode=1;});
