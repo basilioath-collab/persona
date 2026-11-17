@@ -1,4 +1,4 @@
-name: Windows companion installer
+name: Windows Persona installer
 on:
   workflow_dispatch:
 permissions:
@@ -24,7 +24,7 @@ jobs:
       - name: Upload installer only (no databases or workspace dump)
         uses: actions/upload-artifact@v4
         with:
-          name: Persona-Companion-Windows-${{ github.run_number }}
+          name: Persona-Windows-${{ github.run_number }}
           path: companion/src-tauri/target/release/bundle/nsis/*-setup.exe
           if-no-files-found: error
           retention-days: 14

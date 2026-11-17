@@ -3,11 +3,10 @@
 <body>
 <header><div data-tauri-drag-region class="brand">⠿ PERSONA <span>HOJE</span></div><button id="collapse" aria-label="Recolher ou expandir">−</button><button id="hide" aria-label="Manter na bandeja">×</button></header>
 <div id="connection" role="status">Selecione o banco vinculado no Persona</div>
-<main id="content"><div class="toolbar"><button id="open">Abrir Persona ↗</button><button id="settingsToggle" aria-expanded="false">Ajustes</button></div><div id="plan"></div></main>
+<main id="content"><div class="toolbar"><button id="open">Abrir Persona</button><button id="settingsToggle" aria-expanded="false">Ajustes</button></div><div id="plan"></div></main>
 <section id="settings" hidden>
-  <p>Somente leitura. Selecione o mesmo JSON usado em Configurações → Banco de dados vinculado no Persona.</p>
+  <p>Somente leitura. Selecione o mesmo JSON usado em Configurações → Banco de dados vinculado no Persona. Este painel faz parte do mesmo aplicativo.</p>
   <button id="select">Selecionar banco JSON…</button><small id="file"></small>
-  <label>URL do Persona <input id="url" type="url" placeholder="https://seu-persona/" autocomplete="off"></label>
   <label><input id="top" type="checkbox"> Sempre no topo</label>
   <label><input id="summary" type="checkbox"> Resumo diário (horário local)</label>
   <label>Horário <input id="time" type="time" value="08:30"></label>

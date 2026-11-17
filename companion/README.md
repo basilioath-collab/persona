@@ -1,113 +1,101 @@
-# Persona Companion para Windows
+# Persona para Windows — aplicativo único
 
-Overlay somente leitura do **Meu plano de hoje**, em Tauri 2. A PWA continua
-responsável pelo cadastro, planejamento, conclusão, recorrências e gravação do
-banco. Não é necessário deixar o navegador aberto para o companion ler o JSON
-ou enviar o resumo. O processo do companion precisa continuar rodando.
+A partir da versão **0.2.0**, o instalador contém o **Persona completo**, o painel
+compacto de Hoje e os alertas nativos no mesmo aplicativo. Abra apenas **Persona**:
+não é necessário abrir o navegador ou um companion separado.
 
-## Gerar ou baixar o instalador
+A pasta continua se chamando `companion/` por compatibilidade com os comandos de
+build. O identificador do aplicativo foi mantido para reutilizar preferências e
+banco da versão anterior. A versão web/PWA continua disponível e independente.
 
-1. Envie estas alterações ao GitHub. Em **Actions → Windows companion installer
-   → Run workflow**, selecione a branch e execute o workflow manual.
-2. Quando o job terminar, abra **Artifacts** e baixe
-   `Persona-Companion-Windows-<número>`. Extraia o ZIP e execute o `*-setup.exe`.
-   Os artefatos ficam disponíveis por 14 dias e seu download exige acesso ao
-   repositório. Não há publicação automática de Release.
-3. Para distribuir permanentemente: crie uma tag, por exemplo
-   `companion-v0.1.0`, abra **Releases → Draft a new release**, escolha a tag,
-   anexe **somente o instalador** extraído do artefato da mesma revisão,
-   descreva as alterações e publique a Release. O instalador passa a aparecer
-   em **Releases → Assets**. Para outra versão, atualize as versões do
-   `package.json`, `Cargo.toml`, `tauri.conf.json` e os lockfiles antes do build.
+## Instalar e trazer os dados existentes
 
-O workflow está em [windows-companion.yml](../.github/workflows/windows-companion.yml).
-O build padrão gera NSIS para o usuário atual, sem exigir instalação por máquina.
-Não há certificado de assinatura configurado; o Windows pode apresentar
-SmartScreen. Para distribuição assinada, configure um certificado de assinatura
-de código no pipeline segundo a documentação do Tauri, sem incluí-lo no Git.
-O WebView2 é necessário; o instalador Tauri usa o bootstrapper padrão para
-instalá-lo quando faltar (pode precisar de Internet).
+1. No GitHub, execute **Actions → Windows Persona installer → Run workflow** na
+   branch atual. Ao concluir, baixe o artefato `Persona-Windows-<número>`, extraia
+   o ZIP e execute o `*-setup.exe`. Artefatos ficam disponíveis por 14 dias.
+2. Se instalou o antigo **Persona Companion 0.1**, encerre-o pela bandeja antes
+   de instalar/abrir esta versão. Se ficar um atalho antigo, desinstale a versão
+   antiga. Não é necessário manter os dois aplicativos. Faça backup do seu JSON.
+3. Abra **Persona**. Ele já contém as telas de cadastro, planejamento, conclusão,
+   calendário e configurações. No primeiro uso sem vínculo, cria um banco local
+   no diretório de dados do aplicativo, fora do repositório.
+4. Para trazer o banco que você usava na PWA, vá a **Configurações → Banco de
+   dados vinculado → Vincular banco existente** e selecione seu JSON. Se usava
+   apenas o armazenamento do navegador, exporte-o primeiro pela PWA e selecione
+   o arquivo exportado no aplicativo. Os perfis de armazenamento da PWA e do
+   aplicativo Windows são diferentes; não há importação automática do navegador.
+   Um vínculo já configurado no antigo companion é reutilizado.
 
-## Primeiro uso
+O instalador é NSIS para o usuário atual. WebView2 é necessário; o bootstrapper
+padrão do Tauri pode precisar de Internet para instalá-lo. Não há certificado de
+assinatura configurado, portanto o Windows pode apresentar SmartScreen.
 
-1. No Chrome/Edge, abra o Persona e use **Configurações → Banco de dados
-   vinculado → Criar novo banco** ou **Vincular banco existente**. Salve esse
-   JSON numa pasta pessoal fora deste repositório e fora de pastas temporárias.
-   Faça um backup antes de experimentar. Exportar um backup isolado não cria
-   um vínculo: o web precisa estar vinculado para gravar futuras alterações.
-2. Instale e abra **Persona Companion**. Em **Ajustes → Selecionar banco JSON**,
-   selecione **o mesmo arquivo**. O companion pede acesso próprio ao arquivo;
-   não consegue descobrir automaticamente o handle privado do navegador.
-3. Informe a URL onde você usa o Persona, como `https://seu-site/persona/`
-   ou `http://localhost:8000/` se mantiver um servidor local. Clique em
-   **Salvar ajustes**. **Abrir Persona** abre essa URL com `#today` no navegador
-   padrão. Para URL local, o servidor web precisa estar ativo. O companion
-   continua funcionando sem esse servidor. O fluxo existente de instalação
-   da PWA permanece disponível no Chrome/Edge.
-4. Escolha **Sempre no topo**, habilite **Resumo diário** e defina o horário
-   local. **Iniciar com o Windows** habilita/desabilita a entrada do aplicativo
-   no login do usuário, independentemente do botão Salvar.
+## Uso diário
 
-Arraste pela marca PERSONA. Use `−` para recolher e `+` para expandir. O `×` e
-Alt+F4 ocultam a janela, mantendo o processo na bandeja. Clique no ícone da
-bandeja ou use **Abrir Hoje** no menu para reabrir; **Sair do companion** encerra
-o processo e os alertas. Abrir o aplicativo novamente reaproveita a instância
-existente. Posição e tamanho são restaurados pelo plugin de estado da janela.
+- Abra **Persona** pelo seu único atalho. Cadastre, planeje e conclua tudo na
+  janela principal, sem navegador e sem servidor local.
+- Use **Hoje na área de trabalho**, no topo, para abrir o painel compacto.
+  Ele é uma segunda visualização **do mesmo aplicativo**, não uma instalação ou
+  processo independente. Não permite editar atividades.
+- No painel, **Abrir Persona** traz de volta a janela principal na tela Hoje;
+  não abre um endereço no navegador. Em **Ajustes**, configure horário local do
+  resumo, Sempre no topo e Iniciar com o Windows.
+- Fechar a janela principal a oculta e mostra o painel de Hoje. Fechar o painel
+  apenas o oculta. O aplicativo continua na bandeja e envia os alertas.
+- Clique no ícone da bandeja para abrir o Persona completo. O menu também permite
+  mostrar o overlay. **Sair do Persona** grava alterações pendentes e encerra o
+  aplicativo. Se houver falha na gravação, a janela principal avisa e permanece
+  aberta para recuperar/reabrir o banco.
+- Abrir o atalho novamente reutiliza a instância existente. Posição e tamanho
+  das duas visualizações são restaurados separadamente.
 
-## Regras e conexão
+Você pode continuar usando a versão web, se quiser, mas ela não é necessária
+para usar o aplicativo Windows. Para evitar conflitos, prefira um editor por vez.
 
-- As três seções espelham **Meu plano de hoje**: Manhã, Tarde e Se sobrar tempo.
-  A fila automática de atenção dos próximos 30 dias não é um plano do dia e não
-  é acrescentada ao overlay. A seleção, a ordenação e a duração usam
-  `shared/today.js` nos dois clientes.
-- Cada ação deve pertencer à data atual e estar vinculada a uma demanda que
-  ainda existe. Ações concluídas continuam visíveis. Concluir uma **demanda**
-  não marca suas **ações planejadas** como concluídas; o overlay mostra os dois
-  estados separadamente. Recorrências são geradas pelo `complete()` do web e
-  nunca pelo companion. Um novo ciclo só entra no overlay se for planejado.
-- Datas do plano são datas de calendário `YYYY-MM-DD`. Os dois clientes usam
-  agora o dia local, evitando a antiga troca do dia em UTC às 21h no Brasil.
-  O companion recalcula a data a cada segundo, inclusive ao retomar de suspensão.
-- A cada segundo o backend nativo relê o caminho selecionado, inclusive se o
-  arquivo for substituído por renomeação. Não usa um watcher preso ao inode.
-  JSON truncado, estrutura inválida, arquivo ausente ou erro de acesso preservam
-  a última leitura válida **em memória**, com aviso de conexão. O retry é
-  automático. **Ajustes → Selecionar banco JSON** permite trocar o caminho.
-  Selecionar um arquivo inválido não substitui um vínculo que funcionava.
-- O limite de leitura é 32 MiB. O companion não modifica, bloqueia, normaliza no
-  disco, copia para o repositório ou envia o banco pela rede. Após reiniciar,
-  precisa ler novamente o arquivo; não mantém uma cópia pessoal persistente.
-- O resumo informa totais e pendências do plano atual. É despachado no horário
-  configurado ou na primeira leitura válida após esse horário, se ainda pendente.
-  Ao suspender/desligar o PC não há entrega; ao retomar há recuperação apenas do
-  resumo do dia atual. Alterar o JSON ou o horário não repete o resumo já enviado.
-- A data local de despacho é persistida **antes** de chamar a API de notificação,
-  garantindo no máximo uma tentativa por dia, também após reiniciar ou atrasar
-  o relógio. Se o processo cair entre o registro e a chamada, ou o Windows
-  suprimir o toast, não há nova tentativa naquele dia. Falhas retornadas pela API
-  aparecem nos Ajustes/rodapé. O sistema pode ocultar alertas com Não Perturbe.
-- Não existem horários individuais no modelo atual: `period`, `dueDate`,
-  `estimatedMinutes`, `actualMinutes` e o timer não são horários de alarme.
-  Portanto não são inventados alertas por atividade. Uma futura extensão do
-  modelo exigirá regras explícitas e testes para agendamento individual.
+## Banco, sincronização e alertas
 
-As preferências (caminho, URL, horário, opções e histórico de dias despachados)
-ficam no diretório de configuração do aplicativo, normalmente
-`%APPDATA%\com.orizon.persona.companion`. O estado da janela também fica fora do
-checkout. Não compartilhe essa pasta em artefatos. O frontend de produção
-contém apenas os arquivos do overlay e o módulo compartilhado; não incorpora o
-checkout da PWA nem bancos de usuário. `.gitignore` ignora JSONs pessoais, com
-exceções explícitas para configuração, lockfiles e fixtures sintéticas.
+A janela principal grava automaticamente no JSON vinculado, usando arquivo
+provisório e substituição após validação. Antes de salvar, verifica se o conteúdo
+ainda corresponde à última versão lida. Se outra janela/PWA tiver alterado o
+banco, recusa a gravação e pede **Reabrir / atualizar**. Essa opção descarta as
+alterações locais não gravadas após confirmação; faça uma exportação se precisar
+preservá-las. A detecção é otimista: não substitui uma coordenação transacional
+entre editores concorrentes, por isso é recomendado usar um editor de cada vez.
 
-## Desenvolvimento e checks
+O overlay continua **somente leitura**. O backend relê o caminho a cada segundo,
+inclusive se o arquivo for substituído por renomeação. O editor também atualiza
+mudanças externas quando não há alterações locais pendentes. JSON inválido,
+gravação incompleta, arquivo ausente ou erro de acesso preservam a última leitura
+válida na tela, com aviso e retry automático. Para mudar um caminho indisponível,
+use **Vincular banco existente**. O limite de leitura é 32 MiB.
 
-A PWA continua sendo estática: na raiz execute `python3 -m http.server 8000`.
-Não foi convertida em aplicação Tauri. O companion tem frontend próprio em
-`companion/` e backend em `companion/src-tauri/`.
+O plano usa `shared/today.js` nas três visualizações (web, desktop completo e
+overlay): data local atual, vínculo a uma demanda existente, ordem e período.
+Ações concluídas permanecem visíveis. Concluir uma demanda não conclui suas ações
+planejadas automaticamente. Recorrências são geradas apenas pela interface
+completa; o overlay nunca cria ciclos. A fila automática de atenção dos próximos
+30 dias não é acrescentada ao plano de Hoje.
 
-No Windows instale Node 22+, Rust estável com target MSVC e **Visual Studio
-Build Tools → Desenvolvimento para desktop com C++**, incluindo Windows SDK.
-Instale WebView2 se necessário. Então, na raiz:
+O resumo é despachado no horário local configurado ou ao iniciar/retomar depois
+dele, se ainda pendente naquele dia. O registro é persistido antes da chamada da
+API, garantindo no máximo uma tentativa por dia mesmo após reiniciar ou mudar o
+relógio para trás. Se o processo cair entre o registro e a chamada, ou o Windows
+suprimir o toast, não há nova tentativa naquele dia. Não Perturbe pode ocultar
+alertas. O modelo não tem horários individuais; períodos, vencimentos e durações
+não são convertidos em alarmes individuais. O processo do Persona precisa estar
+rodando, mas suas janelas e o navegador podem estar fechados.
+
+Preferências e o banco padrão ficam nos diretórios de configuração/dados do
+aplicativo, normalmente `%APPDATA%\com.orizon.persona.companion`. Arquivos
+vinculados permanecem onde foram escolhidos. A cópia no armazenamento do WebView
+não substitui o JSON. Nada é enviado pela rede ou incorporado ao instalador.
+O build copia apenas uma lista explícita de arquivos da interface; não empacota
+o checkout inteiro. `.gitignore` também ignora bancos pessoais.
+
+## Build, publicação e validação
+
+No Windows, instale Node 22+, Rust estável com target MSVC, Visual Studio Build
+Tools com **Desenvolvimento para desktop com C++** e Windows SDK. Na raiz:
 
 ```powershell
 npm ci
@@ -119,56 +107,46 @@ npm run desktop:build -- --bundles nsis
 ```
 
 Saída: `companion/src-tauri/target/release/bundle/nsis/*-setup.exe`.
-O workflow executa os testes JS e Rust antes de gerar esse arquivo.
+O workflow [Windows Persona installer](../.github/workflows/windows-companion.yml)
+executa os testes JS/Rust e gera esse instalador. Para distribuí-lo por link,
+crie uma Release com uma tag como `persona-v0.2.0`, anexe **somente o instalador**
+do artefato da mesma revisão e publique. Ele ficará em **Releases → Assets**.
+O workflow não publica Releases automaticamente.
 
-No Linux, o núcleo de leitura/agendamento é portátil; o desktop foi configurado
-especificamente para Windows e não requer instalar GTK/WebKit para estes checks:
+No Linux, a interface e o núcleo portátil podem ser verificados sem GTK/WebKit:
 
 ```sh
 npm ci
 npm test
 npm run build
 cargo test --locked --manifest-path companion/src-tauri/Cargo.toml
-# precisa de Python 3 e Chromium; pode substituir o caminho:
 CHROMIUM_PATH=/usr/bin/chromium npm run test:browser
 ```
 
-O teste de navegador inicia e encerra servidores próprios nas portas 8011 e
-1421. Usa `tests/fixtures/today.json`, sem dados pessoais, e uma ponte Tauri
-simulada. Compara a renderização real do web com o overlay, edita e conclui
-uma ação no web, verifica retenção/reconexão visual, mudança de dia local,
-recolhimento e os comandos de abertura. Também carrega a PWA offline. O teste
-Rust exercita a leitura real de arquivo truncado, removido e recuperado e a
-persistência lógica do controle diário. A ponte simulada **não** comprova a
-bandeja, a entrega do toast ou o registro de autostart no Windows.
+O teste de navegador inicia/encerra servidores nas portas 8011 e 1421. Compara
+web e overlay com fixture sintética, exercita criação/conclusão na interface
+Windows incorporada com ponte IPC simulada, atualizações externas, retenção e
+recuperação, mudança de dia local e o shell offline da PWA. Os testes Rust usam
+arquivos reais para gravação atômica, rejeição de edições desatualizadas,
+truncamento/reconexão e controle de resumo sem duplicidade. A simulação não prova
+a entrega de notificações ou o comportamento de janelas reais no Windows.
 
-## Roteiro curto no PC Windows
+### Roteiro no PC
 
-Use um JSON de teste/cópia pessoal fora do checkout; nunca experimente truncar
-o seu único banco real.
-
-1. Instale o artefato do workflow. Vincule o mesmo JSON nos dois aplicativos e
-   planeje ações nos três períodos. Compare ordem, texto, duração e estados.
-   Edite uma demanda, conclua uma ação (informando tempo real no web), depois
-   conclua uma demanda recorrente. Confira atualização em cerca de 1–2 segundos
-   e que o próximo ciclo não foi planejado automaticamente.
-2. Com uma cópia de teste vinculada, guarde seus bytes, escreva temporariamente
-   `{` no arquivo e aguarde: a lista anterior deve continuar com aviso. Restaure
-   o JSON: o aviso deve sumir e as alterações aparecer. Renomeie/remova o arquivo:
-   deve avisar sem perder a lista; restaure-o ou selecione outro arquivo.
-3. Configure resumo para daqui a dois minutos; salve. Feche o navegador e a
-   janela do companion. Aguarde o toast; reabra pela bandeja e reinicie o
-   companion. Edite o JSON e o horário: nenhum segundo resumo no mesmo dia.
-   Em outro dia, abra o companion depois do horário: deve haver um resumo de
-   recuperação. Não Perturbe e notificações do aplicativo devem estar habilitados
-   apropriadamente no Windows para observar o teste.
-4. Arraste, recolha/expanda e alterne Sempre no topo. Use `×`, Alt+F4, clique no
-   ícone e **Abrir Hoje** no menu da bandeja. Use **Sair** e abra de novo: confira
-   posição e opções restauradas. **Abrir Persona** deve chegar à tela Hoje.
-5. Habilite iniciar com Windows, saia e faça logoff/login. O companion deve
-   iniciar sem o navegador. Desabilite e repita: não deve iniciar. Deixe ligado
-   durante a meia-noite local com ações para o dia seguinte e confirme a troca.
-
-Instalação NSIS, bandeja real, notificações nativas, persistência visual da
-janela entre sessões e autostart exigem este teste em Windows. O workflow gera
-o instalador, mas não substitui esse teste interativo.
+1. Encerre o companion antigo, instale esta versão e abra somente **Persona**.
+   Vincule uma cópia do seu banco. Cadastre, edite, planeje e conclua uma ação;
+   confira o JSON e o overlay. Saia e abra novamente: os dados devem persistir.
+2. Feche a janela principal. Confira o painel e reabra o Persona por ele ou pela
+   bandeja, sem abrir o navegador. Teste recolher, arrastar, Sempre no topo e as
+   posições após reiniciar. Abrir o atalho duas vezes não deve duplicar a instância.
+3. Em uma cópia de teste, escreva temporariamente `{`, restaure o conteúdo e
+   depois renomeie o arquivo. Confira aviso, retenção e recuperação. Edite o JSON
+   externamente com uma alteração local pendente: o editor deve recusar a gravação
+   até reabrir o banco; a alteração externa não pode ser substituída silenciosamente.
+4. Configure resumo para daqui a dois minutos, feche as janelas e o navegador e
+   aguarde o toast. Reinicie e mude o horário: não deve repetir no mesmo dia.
+   Em outro dia, abra depois do horário para testar recuperação. Verifique a troca
+   do plano na meia-noite local e após suspensão do PC.
+5. Ative Iniciar com Windows, faça logoff/login e confira o Persona. Desative e
+   repita. Instalação, bandeja real, notificações e autostart permanecem pendentes
+   de validação interativa em Windows.

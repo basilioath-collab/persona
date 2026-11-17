@@ -69,11 +69,75 @@ async function ready(url) {
     await overlay.locator('#hide').click();
     await overlay.locator('#open').click();
     assert.ok(await overlay.evaluate(()=>window.calls.includes('open_persona')));
+    // The installed app now embeds the complete Persona, not a browser shortcut.
+    const desktop = await context.newPage();
+    desktop.on('pageerror',e=>errors.push(e.message));
+    desktop.on('dialog',dialog=>dialog.accept('30'));
+    await desktop.addInitScript(db => {
+      window.nativeStore=db; window.nativeWrites=0; window.overlayRequests=0; window.readFailure=false;
+      window.__TAURI__={event:{listen:async()=>()=>{}},core:{invoke:async(cmd,args)=>{
+        const result=()=>({path:'C:\\Users\\Example\\persona.json',data:structuredClone(window.nativeStore)});
+        if(cmd==='desktop_init'||cmd==='desktop_read') {if(window.readFailure)throw Error('Arquivo indisponível'); return result();}
+        if(cmd==='desktop_write') {
+          if(JSON.stringify(JSON.parse(args.expected))!==JSON.stringify(window.nativeStore)) throw Error('Conflito de edição');
+          window.nativeStore=JSON.parse(args.snapshot);window.nativeWrites++;return result();
+        }
+        if(cmd==='show_overlay') window.overlayRequests++;
+      }}};
+    },fixture);
+    await desktop.goto('http://127.0.0.1:1421/persona/index.html');
+    await desktop.waitForSelector('.tomorrow-item');
+    assert.equal(await desktop.locator('.day-plan .tomorrow-item').count(),4);
+    assert.equal(await desktop.locator('#installAppBtn').isVisible(),false);
+    if(process.env.PERSONA_DESKTOP_SCREENSHOT)await desktop.screenshot({path:process.env.PERSONA_DESKTOP_SCREENSHOT});
+    await desktop.locator('#desktopOverlay').click();
+    assert.equal(await desktop.evaluate(()=>window.overlayRequests),1);
+    await desktop.locator('#newTaskBtn').click();
+    await desktop.locator('#taskForm [name="title"]').fill('Cadastrada no aplicativo único');
+    await desktop.getByRole('button',{name:'Salvar demanda',exact:true}).click();
+    await desktop.waitForFunction(()=>window.nativeStore.tasks.some(t=>t.title==='Cadastrada no aplicativo único'));
+    await desktop.locator('[data-plan-id="p1"] input[type="checkbox"]').check();
+    await desktop.waitForFunction(()=>window.nativeStore.dailyPlans.find(p=>p.id==='p1').done);
+    await desktop.evaluate(()=>{window.nativeStore.dailyPlans[0].text='Mudança externa';});
+    await desktop.waitForFunction(()=>document.querySelector('[data-plan-id="p2"] b').textContent==='Mudança externa');
+    await desktop.evaluate(()=>window.readFailure=true);
+    await desktop.waitForFunction(()=>document.querySelector('#backupState').textContent.includes('Falha no banco'));
+    assert.equal(await desktop.locator('.day-plan .tomorrow-item').count(),4);
+    await desktop.evaluate(()=>{window.readFailure=false;window.nativeStore.dailyPlans[0].text='Recuperada no app';});
+    await desktop.waitForFunction(()=>document.querySelector('[data-plan-id="p2"] b').textContent==='Recuperada no app');
+    // A concurrent external edit during a modal must not advance the editor's baseline.
+    await desktop.locator('[data-view="tasks"]').click();
+    await desktop.locator('#view-tasks [data-id="a"] [data-action="edit"]').first().click();
+    await desktop.locator('#taskForm [name="title"]').fill('Alteração local em conflito');
+    await desktop.evaluate(()=>window.nativeStore.tasks.find(t=>t.id==='a').title='Alteração externa preservada');
+    await desktop.waitForTimeout(1200);
+    await desktop.getByRole('button',{name:'Salvar demanda',exact:true}).click();
+    await desktop.waitForFunction(()=>document.querySelector('#backupState').textContent.includes('Falha no banco'));
+    assert.equal(await desktop.evaluate(()=>window.nativeStore.tasks.find(t=>t.id==='a').title),'Alteração externa preservada');
+    await desktop.locator('[data-view="settings"]').click();
+    await desktop.locator('#reloadDatabase').click();
+    await desktop.waitForFunction(()=>document.querySelector('#backupState').textContent.includes('Banco vinculado'));
+    await desktop.locator('[data-view="tasks"]').click();
+    assert.match(await desktop.locator('#view-tasks').textContent(),/Alteração externa preservada/);
+    const startup = await context.newPage();
+    startup.on('pageerror',e=>errors.push(e.message));
+    await startup.addInitScript(db=>{
+      window.recovered=false;
+      window.__TAURI__={event:{listen:async()=>()=>{}},core:{invoke:async(cmd)=>{
+        if(cmd==='desktop_init') throw Error('Banco indisponível ao iniciar');
+        if(cmd==='status') return {preferences:{database:'test.json'}};
+        if(cmd==='desktop_read') {if(!window.recovered)throw Error('Indisponível');return {path:'test.json',data:structuredClone(db)};}
+      }}};
+    },fixture);
+    await startup.goto('http://127.0.0.1:1421/persona/index.html');
+    await startup.waitForFunction(()=>document.querySelector('#backupState').textContent.includes('Falha no banco'));
+    await startup.evaluate(()=>window.recovered=true);
+    await startup.waitForFunction(()=>document.querySelectorAll('.day-plan .tomorrow-item').length===4&&document.querySelector('#backupState').textContent.includes('Banco vinculado'));
     await web.evaluate(()=>navigator.serviceWorker.ready);
     await web.reload();
     await web.waitForFunction(()=>!!navigator.serviceWorker.controller);
     await context.setOffline(true); await web.reload(); await web.waitForSelector('.day-plan');
     assert.equal(errors.length,0,errors.join('\n'));
-    console.log('PASS: web/overlay parity, real web edit/completion, retained snapshot/recovery UI, collapse/open commands and PWA offline shell. Native tray/notifications require Windows.');
+    console.log('PASS: full native editor bridge (create/complete/external update/recovery), web/overlay parity, collapse/open commands and PWA offline shell. Native tray/notifications require Windows.');
   } finally { if(browser) await browser.close(); for(const s of servers) s.kill(); }
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -43,7 +43,13 @@ pub fn read_database(path: &Path) -> Result<Value, String> {
     if before.len() != after.len() || before.modified().ok() != after.modified().ok() {
         return Err("Banco em atualização; mantendo a última leitura válida".into());
     }
-    let data: Value = serde_json::from_slice(&bytes)
+    parse_database(&bytes)
+}
+fn parse_database(bytes: &[u8]) -> Result<Value, String> {
+    if bytes.len() > 32 * 1024 * 1024 {
+        return Err("Banco excede o limite de 32 MiB".into());
+    }
+    let data: Value = serde_json::from_slice(bytes)
         .map_err(|_| "JSON incompleto ou inválido; mantendo a última leitura válida")?;
     let tasks = data
         .get("tasks")
@@ -65,6 +71,47 @@ pub fn read_database(path: &Path) -> Result<Value, String> {
             }
         }
     }
+    Ok(data)
+}
+// Only the full Persona window calls this writer. The overlay remains read-only.
+pub fn write_database_atomic(
+    path: &Path,
+    snapshot: &str,
+    expected: Option<&Value>,
+) -> Result<Value, String> {
+    use std::io::Write;
+    let data = parse_database(snapshot.as_bytes())?;
+    let check = || -> Result<(), String> {
+        if let Some(expected) = expected {
+            if &read_database(path)? != expected {
+                return Err("O banco foi alterado fora desta janela. Use Reabrir / atualizar antes de salvar.".into());
+            }
+        }
+        Ok(())
+    };
+    check()?;
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_nanos();
+    let temp = path.with_file_name(format!(".persona-{}-{nonce}.tmp", std::process::id()));
+    let result = (|| -> Result<(), String> {
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temp)
+            .map_err(|e| e.to_string())?;
+        file.write_all(snapshot.as_bytes())
+            .map_err(|e| e.to_string())?;
+        file.sync_all().map_err(|e| e.to_string())?;
+        drop(file);
+        check()?;
+        fs::rename(&temp, path).map_err(|e| e.to_string())
+    })();
+    if result.is_err() {
+        let _ = fs::remove_file(&temp);
+    }
+    result?;
     Ok(data)
 }
 #[derive(Default, Clone, Serialize)]
@@ -150,6 +197,23 @@ mod tests {
         assert!(summary_due(&p, "2026-11-18", "08:30", true));
         assert!(!valid_time("25:00"));
         assert!(!valid_time("8:30"));
+    }
+    #[test]
+    fn editor_atomic_writes_reject_stale_or_invalid_updates() {
+        let dir = std::env::temp_dir().join(format!("persona-editor-test-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("test.json");
+        let original = fixture();
+        write_database_atomic(&path, &original.to_string(), None).unwrap();
+        let mut edit = original.clone();
+        edit["tasks"][0]["title"] = "Editada no app".into();
+        write_database_atomic(&path, &edit.to_string(), Some(&original)).unwrap();
+        assert_eq!(read_database(&path).unwrap(), edit);
+        assert!(write_database_atomic(&path, &original.to_string(), Some(&original)).is_err());
+        assert!(write_database_atomic(&path, "{", Some(&edit)).is_err());
+        assert_eq!(read_database(&path).unwrap(), edit);
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
+        fs::remove_dir_all(dir).unwrap();
     }
     #[test]
     fn partial_write_unavailable_recovery_and_read_only() {

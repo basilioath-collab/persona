@@ -65,13 +65,14 @@ navegador e o arquivo nunca é enviado a um serviço externo.
 - as listas de demandas, bloqueadas e concluídas têm paginação de 10, 25 ou 50
   itens.
 
-## Companion para Windows
+## Aplicativo Windows
 
-O [Persona Companion](companion/README.md) exibe **Meu plano de hoje** num overlay
-somente leitura, com bandeja e resumo diário nativo mesmo com o navegador fechado.
-O cadastro e a conclusão continuam na PWA. Os dois aplicativos leem o mesmo JSON
-vinculado; o companion nunca grava nele.
+O [Persona para Windows](companion/README.md) reúne a interface completa, o overlay
+com **Meu plano de hoje**, a bandeja e os alertas nativos no **mesmo aplicativo**.
+Abra apenas **Persona** para cadastrar, planejar e concluir. Ao fechar a janela
+principal, ele continua na bandeja. Não é necessário abrir o navegador ou instalar
+um companion separado. A versão web/PWA continua disponível.
 
-Para gerar o instalador, execute o workflow manual **Windows companion installer**
-na aba **Actions** e baixe o artefato do job. Consulte a documentação acima para
-instalação, vínculo do banco, desenvolvimento, teste no PC e publicação em Releases.
+Para gerar o instalador, execute **Actions → Windows Persona installer → Run workflow**
+e baixe o artefato do job. O guia acima explica como trazer o JSON da PWA, instalar,
+testar no Windows e publicar o instalador com link direto em GitHub Releases.

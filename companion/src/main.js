@@ -7,7 +7,7 @@ function error(err) { $('error').textContent = String(err); }
 const invoke = (cmd, args) => native.core.invoke(cmd, args);
 function fill(p) {
   prefs = p; collapsed = p.collapsed;
-  $('url').value = p.personaUrl; $('time').value = p.summaryTime;
+  $('time').value = p.summaryTime;
   $('summary').checked = p.summaryEnabled; $('top').checked = p.alwaysOnTop;
   $('file').textContent = p.database || 'Nenhum arquivo selecionado';
   document.body.classList.toggle('collapsed', collapsed);
@@ -33,7 +33,7 @@ async function refresh() {
 }
 async function save(overrides = {}) {
   await invoke('configure', {
-    personaUrl: $('url').value.trim(), summaryTime: $('time').value,
+    personaUrl: '', summaryTime: $('time').value,
     summaryEnabled: $('summary').checked, alwaysOnTop: $('top').checked, collapsed, ...overrides,
   });
   prefs = (await invoke('status')).preferences;

@@ -5,11 +5,10 @@ use std::{path::PathBuf, sync::Mutex, time::Duration};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, State,
+    Emitter, Manager, State,
 };
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_notification::NotificationExt;
-use tauri_plugin_opener::OpenerExt;
 
 struct Runtime {
     prefs: Preferences,
@@ -20,8 +19,8 @@ struct AppState {
     runtime: Mutex<Runtime>,
     config: PathBuf,
 }
-fn restore(app: &tauri::AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
+fn restore_window(app: &tauri::AppHandle, label: &str) {
+    if let Some(window) = app.get_webview_window(label) {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
@@ -91,18 +90,126 @@ fn configure(
     Ok(())
 }
 #[tauri::command]
-fn open_persona(app: tauri::AppHandle, state: State<AppState>) -> Result<(), String> {
-    let rt = state.runtime.lock().unwrap();
-    let mut url = tauri::Url::parse(&rt.prefs.persona_url)
-        .map_err(|_| "Configure a URL do Persona primeiro")?;
-    if !["https", "http"].contains(&url.scheme()) {
-        return Err("URL inválida".into());
+fn open_persona(app: tauri::AppHandle) -> Result<(), String> {
+    restore_window(&app, "persona");
+    if let Some(window) = app.get_webview_window("persona") {
+        window
+            .eval("location.hash='#today'")
+            .map_err(|e| e.to_string())?;
     }
-    url.set_fragment(Some("today"));
-    app.opener()
-        .open_url(url.to_string(), None::<&str>)
-        .map_err(|e| e.to_string())
+    Ok(())
 }
+#[tauri::command]
+fn show_overlay(app: tauri::AppHandle) {
+    restore_window(&app, "main");
+}
+fn require_editor(window: &tauri::WebviewWindow) -> Result<(), String> {
+    if window.label() != "persona" {
+        return Err("Somente a janela principal pode editar o banco".into());
+    }
+    Ok(())
+}
+fn current_database(state: &AppState) -> Result<Value, String> {
+    let rt = state.runtime.lock().unwrap();
+    let path = rt
+        .prefs
+        .database
+        .as_ref()
+        .ok_or("Nenhum banco selecionado")?;
+    Ok(json!({"path": path, "data": read_database(std::path::Path::new(path))?}))
+}
+#[tauri::command]
+fn desktop_read(state: State<AppState>) -> Result<Value, String> {
+    current_database(&state)
+}
+fn adopt_database(state: &AppState, path: PathBuf) -> Result<Value, String> {
+    let data = read_database(&path)?;
+    let mut rt = state.runtime.lock().unwrap();
+    let mut prefs = rt.prefs.clone();
+    prefs.database = Some(path.to_string_lossy().into_owned());
+    save_preferences(&state.config, &prefs)?;
+    rt.prefs = prefs;
+    rt.snapshot = Snapshot {
+        data: Some(data.clone()),
+        connection: "connected".into(),
+        last_valid_at: Some(Utc::now().to_rfc3339()),
+    };
+    Ok(json!({"path":path,"data":data}))
+}
+#[tauri::command]
+fn desktop_init(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    state: State<AppState>,
+    initial: String,
+) -> Result<Value, String> {
+    require_editor(&window)?;
+    if state.runtime.lock().unwrap().prefs.database.is_some() {
+        return current_database(&state);
+    }
+    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let path = dir.join("persona.json");
+    // Never overwrite an existing default database, including after settings recovery.
+    if !path.exists() {
+        write_database_atomic(&path, &initial, None)?;
+    }
+    adopt_database(&state, path)
+}
+#[tauri::command]
+async fn desktop_create(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+    initial: String,
+) -> Result<Option<Value>, String> {
+    require_editor(&window)?;
+    let file = tauri::async_runtime::spawn_blocking(move || {
+        app.dialog()
+            .file()
+            .add_filter("Banco Persona", &["json"])
+            .set_file_name("persona.json")
+            .blocking_save_file()
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    if let Some(file) = file {
+        let path = file.into_path().map_err(|e| e.to_string())?;
+        write_database_atomic(&path, &initial, None)?;
+        return adopt_database(&state, path).map(Some);
+    }
+    Ok(None)
+}
+#[tauri::command]
+fn desktop_write(
+    window: tauri::WebviewWindow,
+    state: State<AppState>,
+    snapshot: String,
+    expected: String,
+    path: String,
+) -> Result<Value, String> {
+    require_editor(&window)?;
+    let mut rt = state.runtime.lock().unwrap();
+    if rt.prefs.database.as_deref() != Some(&path) {
+        return Err("O banco vinculado mudou. Reabra o arquivo antes de salvar.".into());
+    }
+    let expected: Value =
+        serde_json::from_str(&expected).map_err(|_| "Reabra o banco antes de salvar")?;
+    let data = write_database_atomic(std::path::Path::new(&path), &snapshot, Some(&expected))?;
+    rt.snapshot = Snapshot {
+        data: Some(data.clone()),
+        connection: "connected".into(),
+        last_valid_at: Some(Utc::now().to_rfc3339()),
+    };
+    Ok(json!({"path":path,"data":data}))
+}
+#[tauri::command]
+fn finish_exit(app: tauri::AppHandle, window: tauri::WebviewWindow) -> Result<(), String> {
+    require_editor(&window)?;
+    app.exit(0);
+    Ok(())
+}
+
 fn tick(app: &tauri::AppHandle) {
     let state = app.state::<AppState>();
     let mut rt = state.runtime.lock().unwrap();
@@ -148,7 +255,9 @@ fn tick(app: &tauri::AppHandle) {
 }
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _, _| restore(app)))
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            restore_window(app, "persona")
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
@@ -165,7 +274,13 @@ pub fn run() {
             status,
             select_database,
             configure,
-            open_persona
+            open_persona,
+            show_overlay,
+            desktop_init,
+            desktop_read,
+            desktop_create,
+            desktop_write,
+            finish_exit
         ])
         .setup(|app| {
             let dir = app.path().app_config_dir()?;
@@ -194,21 +309,25 @@ pub fn run() {
                 }),
                 config,
             });
-            let show = MenuItem::with_id(app, "show", "Abrir Hoje", true, None::<&str>)?;
+            let show =
+                MenuItem::with_id(app, "show", "Mostrar overlay de Hoje", true, None::<&str>)?;
             let open = MenuItem::with_id(app, "persona", "Abrir Persona", true, None::<&str>)?;
-            let quit = MenuItem::with_id(app, "quit", "Sair do companion", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Sair do Persona", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &open, &quit])?;
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("Persona • Hoje")
+                .tooltip("Persona")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
-                    "show" => restore(app),
+                    "show" => restore_window(app, "main"),
                     "persona" => {
-                        let _ = open_persona(app.clone(), app.state());
+                        let _ = open_persona(app.clone());
                     }
-                    "quit" => app.exit(0),
+                    "quit" => {
+                        restore_window(app, "persona");
+                        let _ = app.emit_to("persona", "persona-exit", ());
+                    }
                     _ => (),
                 })
                 .on_tray_icon_event(|tray, event| {
@@ -220,7 +339,7 @@ pub fn run() {
                             ..
                         }
                     ) {
-                        restore(tray.app_handle());
+                        restore_window(tray.app_handle(), "persona");
                     }
                 })
                 .build(app)?;
@@ -235,8 +354,13 @@ pub fn run() {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
                 let _ = window.hide();
+                if window.label() == "persona" {
+                    if let Some(overlay) = window.app_handle().get_webview_window("main") {
+                        let _ = overlay.show();
+                    }
+                }
             }
         })
         .run(tauri::generate_context!())
-        .expect("Falha ao iniciar Persona Companion");
+        .expect("Falha ao iniciar Persona");
 }
