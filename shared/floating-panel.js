@@ -6,12 +6,13 @@
     'waiting-return': 'Aguardando retorno', blocked: 'Bloqueada', done: 'Concluída' };
   function create({ button, getDatabase, onOpenPersona, onMessage }) {
     let panel = null, timer = null, signature = '', generation = 0, opening = false;
-    const initialText = button.textContent;
+    const initialText = button.textContent, initialTitle = button.title;
+    const pageSize = 3;
     let list, summary, focusRow, counter, previous, next, expand, toolbar;
-    let rows = [], selectedId = null, dayKey = '', expanded = false;
+    let rows = [], pageIndex = 0, dayKey = '', expanded = false;
     function reset() {
       clearInterval(timer); timer = null; panel = null; signature = ''; opening = false;
-      button.disabled = false; button.textContent = initialText; button.setAttribute('aria-pressed', 'false');
+      button.disabled = false; button.textContent = initialText; button.title = initialTitle; button.setAttribute('aria-pressed', 'false');
     }
     function close() {
       generation++;
@@ -24,23 +25,29 @@
       if (text !== undefined) node.textContent = text;
       return node;
     }
+    function compactHeight() { return Math.max(112, 80 + Math.min(pageSize, Math.max(0, rows.length - pageIndex * pageSize)) * 24); }
+    function resizePanel() {
+      try { panel.resizeTo(panel.outerWidth, (expanded ? 400 : compactHeight()) + Math.max(0, panel.outerHeight - panel.innerHeight)); } catch {}
+    }
     function showFocus() {
-      const index = rows.findIndex(row => row.id === selectedId), row = rows[index];
-      counter.textContent = rows.length ? `${index + 1}/${rows.length}` : '0/0';
-      previous.disabled = index <= 0; next.disabled = index < 0 || index >= rows.length - 1;
-      focusRow.replaceChildren();
-      focusRow.removeAttribute('data-plan-id'); focusRow.classList.remove('done');
-      if (!row) {
-        focusRow.append(element(panel.document, 'p', 'empty', 'Nenhuma ação planejada hoje.'));
-        return;
+      const pages = Math.ceil(rows.length / pageSize), visible = rows.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+      counter.textContent = pages ? `${pageIndex + 1}/${pages}` : '0/0';
+      counter.title = pages ? `Página ${pageIndex + 1} de ${pages}` : 'Nenhuma página';
+      counter.setAttribute('aria-label', counter.title);
+      previous.disabled = pageIndex <= 0; next.disabled = !pages || pageIndex >= pages - 1;
+      focusRow.replaceChildren(); focusRow.dataset.page = String(pageIndex + 1);
+      if (!visible.length) focusRow.append(element(panel.document, 'p', 'empty', 'Nenhuma ação planejada hoje.'));
+      for (const row of visible) {
+        const point = element(panel.document, 'article', `focus-point${row.done ? ' done' : ''}`);
+        point.dataset.planId = row.id;
+        const title = element(panel.document, 'b', 'focus-title', `${row.done ? '✓' : '○'} ${row.text}`);
+        const period = periods.find(([key]) => key === row.period)?.[1] || '';
+        title.title = `${row.text} — ${period} · ${row.task} · ${labels[row.status] || row.status || ''}`;
+        point.append(title, element(panel.document, 'span', 'duration', PersonaToday.durationText(row.minutes)));
+        focusRow.append(point);
       }
-      focusRow.dataset.planId = row.id;
-      focusRow.classList.toggle('done', row.done);
-      const title = element(panel.document, 'b', 'focus-title', `${row.done ? '✓' : '○'} ${row.text}`);
-      title.title = `${row.text} — ${row.task} · ${labels[row.status] || row.status || ''}`;
-      focusRow.append(title, element(panel.document, 'span', 'duration', PersonaToday.durationText(row.minutes)));
       for (const item of list.querySelectorAll('.item')) {
-        if (item.dataset.planId === selectedId) item.setAttribute('aria-current', 'true');
+        if (visible.some(row => row.id === item.dataset.planId)) item.setAttribute('aria-current', 'true');
         else item.removeAttribute('aria-current');
       }
     }
@@ -49,14 +56,14 @@
       panel.document.body.classList.toggle('expanded', expanded);
       expand.textContent = expanded ? 'Foco' : 'Lista';
       expand.setAttribute('aria-expanded', String(expanded));
-      expand.title = expanded ? 'Recolher para uma atividade' : 'Expandir lista completa';
+      expand.title = expanded ? 'Recolher para o plano paginado' : 'Expandir lista completa';
       expand.setAttribute('aria-label', expand.title);
       // Resizing is browser-controlled and may require the click's user activation.
-      try { panel.resizeTo(panel.outerWidth, (expanded ? 400 : 112) + Math.max(0, panel.outerHeight - panel.innerHeight)); } catch {}
+      resizePanel();
     }
     function move(offset) {
-      const index = rows.findIndex(row => row.id === selectedId), row = rows[index + offset];
-      if (row) { selectedId = row.id; showFocus(); }
+      const target = pageIndex + offset;
+      if (target >= 0 && target < Math.ceil(rows.length / pageSize)) { pageIndex = target; showFocus(); resizePanel(); }
     }
     function refresh() {
       if (!panel || panel.closed) return;
@@ -70,17 +77,14 @@
       const nextSignature = JSON.stringify({ day, rows: updated });
       if (nextSignature === signature) return;
       signature = nextSignature;
-      const before = rows.find(row => row.id === selectedId);
+      const anchor = rows[pageIndex * pageSize]?.id;
       rows = updated;
-      const current = rows.find(row => row.id === selectedId);
-      if (dayKey !== day || !current) selectedId = (rows.find(row => !row.done) || rows[0])?.id ?? null;
-      else if (before && !before.done && current.done) {
-        const index = rows.indexOf(current);
-        selectedId = [...rows.slice(index + 1), ...rows.slice(0, index)].find(row => !row.done)?.id || current.id;
-      }
+      const anchorIndex = rows.findIndex(row => row.id === anchor);
+      pageIndex = dayKey !== day ? 0 : anchorIndex >= 0 ? Math.floor(anchorIndex / pageSize)
+        : Math.min(pageIndex, Math.max(0, Math.ceil(rows.length / pageSize) - 1));
       dayKey = day;
       const doc = panel.document, scrollTop = list.scrollTop;
-      summary.textContent = `${rows.filter(row => !row.done).length} pendente(s) · ${PersonaToday.durationText(rows.reduce((sum, row) => sum + (+row.minutes || 0), 0))}`;
+      summary.textContent = `${rows.filter(row => row.done).length}/${rows.length} concluídas · ${PersonaToday.durationText(rows.reduce((sum, row) => sum + (+row.minutes || 0), 0))} planejados`;
       list.replaceChildren();
       if (!rows.length) list.append(element(doc, 'p', 'empty', 'Hoje ainda não tem ações planejadas. Monte seu plano no Persona.'));
       for (const [period, label] of periods) {
@@ -91,7 +95,7 @@
         for (const row of grouped) {
           const item = element(doc, 'button', `item${row.done ? ' done' : ''}`);
           item.type = 'button'; item.dataset.planId = row.id; item.title = 'Mostrar esta atividade no modo Foco';
-          item.addEventListener('click', () => { selectedId = row.id; showFocus(); setExpanded(false); });
+          item.addEventListener('click', () => { pageIndex = Math.floor(rows.findIndex(item => item.id === row.id) / pageSize); showFocus(); setExpanded(false); expand.focus({preventScroll:true}); });
           const copy = element(doc, 'div', 'copy');
           copy.append(element(doc, 'b', '', row.text),
             element(doc, 'small', '', `${row.task} · ${labels[row.status] || row.status || ''}`),
@@ -102,11 +106,11 @@
         list.append(section);
       }
       list.scrollTop = scrollTop;
-      showFocus();
+      showFocus(); resizePanel();
     }
     function mount(win) {
       const doc = win.document;
-      rows = []; selectedId = null; dayKey = ''; expanded = false;
+      rows = []; pageIndex = 0; dayKey = ''; expanded = false;
       doc.title = 'Persona • Hoje'; doc.documentElement.lang = 'pt-BR';
       const link = doc.createElement('link'); link.rel = 'stylesheet'; link.href = stylesheet;
       doc.head.append(link);
@@ -118,7 +122,7 @@
       expand.addEventListener('click', () => setExpanded(!expanded));
       header.append(brand, counter, expand);
       focusRow = element(doc, 'article', 'focus-row'); focusRow.id = 'focusActivity';
-      const navigation = element(doc, 'nav', 'navigation'); navigation.setAttribute('aria-label', 'Atividades do plano');
+      const navigation = element(doc, 'nav', 'navigation'); navigation.setAttribute('aria-label', 'Páginas do plano de Hoje');
       previous = element(doc, 'button', '', '‹ Anterior'); previous.id = 'previousActivity'; previous.type = 'button';
       next = element(doc, 'button', '', 'Próxima ›'); next.id = 'nextActivity'; next.type = 'button';
       previous.addEventListener('click', () => move(-1)); next.addEventListener('click', () => move(1));
@@ -126,14 +130,14 @@
       const open = element(doc, 'button', 'return-persona', 'Persona'); open.type = 'button';
       open.title = 'Voltar ao Persona'; open.addEventListener('click', returnToPersona);
       navigation.append(previous, open, next);
-      summary = element(doc, 'p', 'summary');
+      summary = element(doc, 'p', 'summary'); summary.id = 'dailyProgress'; summary.setAttribute('role','status');
       toolbar = element(doc, 'div', 'toolbar');
       const fullOpen = element(doc, 'button', '', 'Voltar ao Persona'); fullOpen.type = 'button';
       fullOpen.addEventListener('click', returnToPersona);
       const hide = element(doc, 'button', 'secondary', 'Fechar painel'); hide.type = 'button';
       hide.addEventListener('click', close); toolbar.append(fullOpen, hide);
       list = element(doc, 'main'); list.id = 'floatingPlan';
-      doc.body.replaceChildren(header, focusRow, navigation, summary, toolbar, list);
+      doc.body.replaceChildren(header, summary, focusRow, navigation, toolbar, list);
       refresh(); timer = setInterval(refresh, 1000);
     }
     async function open() {
@@ -148,12 +152,13 @@
       opening = true; button.disabled = true;
       try {
         // Called directly by the user's click, preserving the required browser activation.
-        const win = await api.requestWindow({ width: 320, height: 112, preferInitialWindowPlacement: true });
+        const count = Math.min(pageSize, PersonaToday.planItems(getDatabase(), PersonaToday.today()).length);
+        const win = await api.requestWindow({ width: 320, height: Math.max(112, 80 + count * 24), preferInitialWindowPlacement: true });
         if (attempt !== generation) { win.close(); return; }
         panel = win;
         win.addEventListener('pagehide', () => { if (panel === win) reset(); }, { once: true });
         mount(win);
-        button.textContent = 'Painel aberto'; button.setAttribute('aria-pressed', 'true');
+        button.textContent = 'Trazer painel à frente'; button.title = 'Mostrar novamente o painel. Para evitar o recorte, posicione-o acima da barra de tarefas.'; button.setAttribute('aria-pressed', 'true');
       } catch (error) {
         close();
         onMessage(error.name === 'NotAllowedError'

@@ -22,28 +22,38 @@ usando Document Picture-in-Picture, sem instalar ou executar um `.exe`.
 
 - Arraste a **barra de título do navegador** para posicionar o painel e use as
   bordas para redimensioná-lo; o tamanho e a posição são controlados pelo Chrome.
-- O painel abre no **modo Foco**: faixa escura e compacta, com uma atividade,
-  duração, contador `1/3` e **Anterior/Próxima**. A primeira ação pendente é
-  selecionada ao abrir. Navegar não altera nem conclui atividades.
+- O painel abre no **modo Foco** com o **plano de Hoje paginado**, até três ações
+  por página, duração e estado de conclusão. O contador `1/2` indica a página,
+  e **Anterior/Próxima** navega entre páginas. O resumo mostra quantas ações do
+  plano foram concluídas e a duração total planejada. Não inclui o backlog,
+  checklists ou anotações de demandas que não sejam ações do plano de Hoje.
 - **Lista** expande o plano completo por Manhã, Tarde e Se sobrar tempo. Clique
-  numa atividade para colocá-la em foco e recolher; **Foco** também recolhe.
+  numa atividade para voltar à página que a contém; **Foco** também recolhe.
   No Chrome compatível, a janela acompanha a expansão/recolhimento. O navegador
   pode impor tamanho mínimo; você pode ajustar as bordas manualmente.
-- O tamanho inicial solicitado é 320 × 112 px, além da barra do Chrome, sem data,
+- O tamanho inicial solicitado é 320 px de largura e 112–152 px de altura,
+  conforme a quantidade de ações da página, além da barra do Chrome. Sem data,
   rodapé ou botões grandes no modo Foco. O fundo é escuro e uniforme, com texto
   discreto que fica mais claro ao passar o mouse. A janela continua **opaca**.
   Textos longos têm reticências; passe o mouse sobre o título ou abra a Lista
   para ler por inteiro.
 - Edições, conclusões, importação do banco e a mudança de data local atualizam o
-  painel. A seleção é mantida quando possível; ao concluir a ação em foco no
-  Persona, o painel avança para outra pendente. A conclusão continua na tela
-  principal. **Persona**, na faixa, traz a tela Hoje de volta.
+  painel. A página é mantida quando possível, incluindo ações já concluídas.
+  A conclusão continua na tela principal. **Persona**, na faixa, traz Hoje de volta.
 - O **X do Chrome** fecha somente o painel; o modo Lista também tem **Fechar
   painel**. O botão no Persona permite reabri-lo; com ele já aberto, apenas o
   traz à frente. Fechar ou recarregar a guia/PWA principal fecha o painel.
 - Precisa de HTTPS (ou localhost) e de suporte do Chrome/Edge à API. Se o recurso
   estiver ausente ou bloqueado pela empresa, o Persona informa isso. Não há
   executável auxiliar nem mudança de configuração de segurança do Windows.
+
+**Barra de tarefas e janelas do Windows:** a janela PiP é gerenciada pelo Chrome.
+O site não consegue alterar sua prioridade acima da barra de tarefas, Menu Iniciar
+ou comandos como Mostrar área de trabalho. Para não recortar o painel, arraste a
+barra de título do Chrome e deixe-o um pouco acima da barra de tarefas. O botão
+**Trazer painel à frente**, no Persona, pode recuperar a janela entre aplicativos
+comuns, mas não garante sobreposição a elementos do próprio Windows. Não há rotina
+que roube o foco ou force a janela à frente repetidamente.
 
 O Persona/Chrome precisa continuar rodando. Alertas nativos com o navegador
 fechado e transparência real sobre o desktop continuam sendo recursos da versão

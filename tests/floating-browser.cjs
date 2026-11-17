@@ -41,14 +41,16 @@ async function ready() {
     assert.equal(await page.evaluate(()=>window.originalPanel===documentPictureInPicture.window),true);
     const pipPage=context.pages().find(p=>p!==page);
     if(pipPage&&process.env.PERSONA_PIP_SCREENSHOT)await pipPage.screenshot({path:process.env.PERSONA_PIP_SCREENSHOT});
-    assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#focusActivity').dataset.planId),'p1');
-    assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#focusCounter').textContent),'1/4');
+    assert.deepEqual(await page.evaluate(()=>[...documentPictureInPicture.window.document.querySelectorAll('.focus-point')].map(el=>el.dataset.planId)),['p1','p4','p2']);
+    assert.match(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#dailyProgress').textContent),/1\/4 concluídas/);
+    assert.equal(await page.locator('#floatingPanelBtn').textContent(),'Trazer painel à frente');
+    assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#focusCounter').textContent),'1/2');
     assert.equal(await page.evaluate(()=>documentPictureInPicture.window.getComputedStyle(documentPictureInPicture.window.document.querySelector('main')).display),'none');
     assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('footer')),null);
     if(pipPage) {
       await pipPage.locator('#nextActivity').click();
-      assert.equal(await pipPage.locator('#focusCounter').textContent(),'2/4');
-      assert.equal(await pipPage.locator('#focusActivity').getAttribute('data-plan-id'),'p4');
+      assert.equal(await pipPage.locator('#focusCounter').textContent(),'2/2');
+      assert.equal(await pipPage.locator('.focus-point').getAttribute('data-plan-id'),'p3');
       await pipPage.locator('#previousActivity').click();
       assert.equal(await pipPage.locator('#previousActivity').isDisabled(),true);
       await pipPage.locator('#expandPlan').click();
@@ -58,16 +60,18 @@ async function ready() {
       assert.equal(await pipPage.locator('#focusActivity').isVisible(),false);
       await pipPage.locator('[data-plan-id="p3"]').click();
       await pipPage.waitForFunction(()=>innerHeight<=180);
-      assert.equal(await pipPage.locator('#focusActivity').getAttribute('data-plan-id'),'p3');
-      assert.equal(await pipPage.locator('#focusCounter').textContent(),'4/4');
+      assert.equal(await pipPage.locator('.focus-point').getAttribute('data-plan-id'),'p3');
+      assert.equal(await pipPage.locator('#focusCounter').textContent(),'2/2');
       assert.equal(await pipPage.locator('#nextActivity').isDisabled(),true);
       assert.equal(await pipPage.locator('#floatingPlan').isVisible(),false);
-      await pipPage.locator('#previousActivity').click();await pipPage.locator('#previousActivity').click();await pipPage.locator('#previousActivity').click();
+      await pipPage.locator('#previousActivity').click();
     }
 
     await page.locator('[data-plan-id="p1"] input[type="checkbox"]').check();
     await page.waitForFunction(()=>documentPictureInPicture.window.document.querySelector('.item[data-plan-id="p1"]').classList.contains('done'));
-    assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#focusActivity').dataset.planId),'p2');
+    assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#focusCounter').textContent),'1/2');
+    assert.match(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#dailyProgress').textContent),/2\/4 concluídas/);
+    assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('.focus-point[data-plan-id="p1"]').classList.contains('done')),true);
     await page.locator('[data-view="tasks"]').click();
     await page.locator('#view-tasks [data-id="a"] [data-action="edit"]').first().click();
     await page.locator('#taskForm [name="title"]').fill('Editada com painel aberto <b>texto</b>');
@@ -76,10 +80,10 @@ async function ready() {
     assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('.copy small b')),null);
     await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('.return-persona').click());
     assert.equal(await page.locator('#view-today').evaluate(el=>el.classList.contains('active')),true);
-    // Removing the focused row selects a surviving pending action without a stale counter.
+    // Removing a row recalculates pages and keeps all remaining planned activities visible.
     await page.locator('[data-plan-id="p2"] [data-plan-action="delete"]').click();
-    await page.waitForFunction(()=>documentPictureInPicture.window.document.querySelector('#focusActivity').dataset.planId==='p3');
-    assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#focusCounter').textContent),'3/3');
+    await page.waitForFunction(()=>documentPictureInPicture.window.document.querySelectorAll('.item').length===3&&!!documentPictureInPicture.window.document.querySelector('.focus-point[data-plan-id="p3"]'));
+    assert.equal(await page.evaluate(()=>documentPictureInPicture.window.document.querySelector('#focusCounter').textContent),'1/1');
     // The visible panel recalculates its date even without a data write.
     await page.evaluate(()=>window.testNow='2026-11-18T03:00:01Z');
     await page.waitForFunction(()=>documentPictureInPicture.window.document.querySelectorAll('.item').length===1&&!!documentPictureInPicture.window.document.querySelector('[data-plan-id="tomorrow"]'));
@@ -116,6 +120,6 @@ async function ready() {
     assert.match(await denied.locator('#toast').textContent(),/não permitiu abrir o painel/);
     assert.equal(await denied.locator('#floatingPanelBtn').isEnabled(),true);
     assert.deepEqual(errors,[]);
-    console.log('PASS: real Chrome Document PiP opens/reuses/closes/reopens; shared plan parity, live completion/edit, literal text, return to Today, compact focus/navigation, expand/select/collapse, completion advance, local midnight, empty state, offline shell/styles and feature/policy messages.');
+    console.log('PASS: real Chrome Document PiP opens/reuses/closes/reopens; shared plan parity, live completion/edit, literal text, return to Today, three-point pages/day progress, page navigation, expand/select/collapse, live completion, local midnight, empty state, offline shell/styles and feature/policy messages.');
   } finally {await browser?.close();server.kill();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
