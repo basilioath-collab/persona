@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "meta": {"demo": false},
+  "settings": {"dailyCapacityMinutes": 420},
+  "tasks": [
+    {"id":"a","title":"Revisão sintética","status":"in-progress","recurrence":"monthly","dueDate":"2026-11-17"},
+    {"id":"b","title":"Demanda concluída","status":"done","recurrence":"none"},
+    {"id":"c","title":"Novo ciclo já gerado pelo web","status":"planned","generatedFrom":"b","recurrence":"annual","dueDate":"2027-11-17"}
+  ],
+  "dailyPlans": [
+    {"id":"p2","taskId":"a","text":"Revisar evidências","date":"2026-11-17","period":"afternoon","estimatedMinutes":45,"order":2,"done":false},
+    {"id":"p1","taskId":"a","text":"Ler protocolo","date":"2026-11-17","period":"morning","estimatedMinutes":30,"order":0,"done":false},
+    {"id":"p3","taskId":"b","text":"Arquivar relatório","date":"2026-11-17","period":"flexible","estimatedMinutes":15,"order":3,"done":false},
+    {"id":"p4","taskId":"a","text":"Conferência concluída","date":"2026-11-17","period":"morning","estimatedMinutes":60,"order":1,"done":true},
+    {"id":"orphan","taskId":"removed","text":"Órfão não aparece","date":"2026-11-17","period":"morning","order":4},
+    {"id":"tomorrow","taskId":"c","text":"Planejar novo ciclo","date":"2026-11-18","period":"morning","estimatedMinutes":30,"order":0,"done":false}
+  ],
+  "projects": [], "history": [], "inbox": []
+}

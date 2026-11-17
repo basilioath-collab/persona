@@ -1,7 +1,8 @@
-const CACHE_NAME = 'orizon-persona-v13';
+const CACHE_NAME = 'orizon-persona-v14';
 const APP_SHELL = [
   './',
   './index.html',
+  './shared/today.js',
   './manifest.webmanifest',
   './icons/persona.svg',
   './icons/persona-maskable.svg'

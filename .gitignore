@@ -1,0 +1,10 @@
+node_modules/
+companion/dist/
+companion/src-tauri/target/
+# Personal databases must never be committed. Only synthetic fixtures are allowed.
+*.json
+!package.json
+!package-lock.json
+!companion/src-tauri/tauri.conf.json
+!companion/src-tauri/capabilities/*.json
+!tests/fixtures/*.json
