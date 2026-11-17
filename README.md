@@ -73,6 +73,8 @@ Abra apenas **Persona** para cadastrar, planejar e concluir. Ao fechar a janela
 principal, ele continua na bandeja. Não é necessário abrir o navegador ou instalar
 um companion separado. A versão web/PWA continua disponível.
 
-Para gerar o instalador, execute **Actions → Windows Persona installer → Run workflow**
-e baixe o artefato do job. O guia acima explica como trazer o JSON da PWA, instalar,
+Para baixar a versão **sem instalação**, execute **Actions → Windows Persona
+(portable + installer) → Run workflow** e baixe **Persona-Portable-Windows-…**.
+Extraia o ZIP e abra **Persona.exe**. O artefato **Persona-Windows-…** contém o
+instalador tradicional. O guia acima explica como trazer o JSON da PWA, instalar,
 testar no Windows e publicar o instalador com link direto em GitHub Releases.

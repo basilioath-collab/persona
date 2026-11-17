@@ -1,6 +1,11 @@
-name: Windows Persona installer
+name: Windows Persona (portable + installer)
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/windows-companion.yml
+      - scripts/package-portable.mjs
 permissions:
   contents: read
 jobs:
@@ -13,14 +18,30 @@ jobs:
           node-version: '22'
           cache: npm
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: companion/src-tauri -> target
       - name: Install locked dependencies
         run: npm ci
       - name: Shared rules
         run: npm test
       - name: Native core tests
         run: cargo test --locked --manifest-path companion/src-tauri/Cargo.toml
+      - name: Build portable app (no installer)
+        run: npm run desktop:portable
+      - name: Upload portable app (explicit files only)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Persona-Portable-Windows-${{ github.run_number }}
+          path: |
+            companion/src-tauri/target/portable/Persona.exe
+            companion/src-tauri/target/portable/WebView2Loader.dll
+            companion/src-tauri/target/portable/LEIA-ME.txt
+            companion/src-tauri/target/portable/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
       - name: Build installer
-        run: npm run desktop:build -- --bundles nsis
+        run: npm run desktop:build -- --bundles nsis -- --locked
       - name: Upload installer only (no databases or workspace dump)
         uses: actions/upload-artifact@v4
         with:

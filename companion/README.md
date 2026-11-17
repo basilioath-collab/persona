@@ -8,9 +8,47 @@ A pasta continua se chamando `companion/` por compatibilidade com os comandos de
 build. O identificador do aplicativo foi mantido para reutilizar preferências e
 banco da versão anterior. A versão web/PWA continua disponível e independente.
 
+## Versão portátil: abrir sem instalar
+
+O workflow gera dois downloads separados. Para executar sem instalador:
+
+1. Abra **Actions → Windows Persona (portable + installer)** e a execução mais
+   recente. Alterações no workflow/empacotador iniciam uma execução automaticamente;
+   também é possível usar **Run workflow** em `main`.
+2. Na execução, baixe **Artifacts → Persona-Portable-Windows-<número>**. Esse é
+   o ZIP portátil. O artefato **Persona-Windows-<número>** é o instalador tradicional.
+3. Use **Extrair tudo** para uma pasta sua, como `Documentos\Persona`.
+   Abra **Persona.exe** na pasta extraída, mantendo juntos os demais arquivos.
+   Não execute diretamente de dentro do ZIP.
+4. O Persona completo abre com o mesmo overlay, bandeja e configurações. Para
+   mostrar o painel, clique em **Hoje na área de trabalho**. Para trazer o banco
+   da PWA, selecione seu JSON em Configurações.
+
+Esse pacote não executa instalador, não cria serviço e não solicita elevação.
+Ele exige **Windows 10/11 x64 e WebView2 Runtime já disponível no PC**. O loader,
+quando necessário, está incluído, mas o runtime completo não é instalado por esta
+versão. Se faltar o WebView2 ou houver bloqueio corporativo de execução, será
+necessário apoio da TI. Portátil não garante autorização para executar no PC.
+
+As preferências e o banco padrão continuam na pasta de dados do usuário
+(`%APPDATA%\com.orizon.persona.companion`), não junto ao executável. O banco
+vinculado permanece no local escolhido. Portanto a versão é **sem instalação**,
+mas copiar a pasta do executável para outro computador não leva seus dados
+automaticamente. Use exportação/vínculo do JSON para isso.
+
+Para atualizar, saia pela bandeja e extraia o novo pacote. Se habilitou **Iniciar
+com o Windows**, mantenha a pasta fixa; desabilite essa opção antes de mover ou
+apagar os arquivos. As notificações devem ser testadas no PC; o sistema pode
+identificar o aplicativo portátil de modo diferente do instalado.
+
+O pacote inclui apenas `Persona.exe`, `LEIA-ME.txt`, `SHA256SUMS.txt` e, quando
+necessária, `WebView2Loader.dll`. Não inclui bancos ou preferências. O upload do
+portátil ocorre antes do build NSIS, de modo que uma falha no instalador não
+impede o download portátil já gerado.
+
 ## Instalar e trazer os dados existentes
 
-1. No GitHub, execute **Actions → Windows Persona installer → Run workflow** na
+1. No GitHub, execute **Actions → Windows Persona (portable + installer) → Run workflow** na
    branch atual. Ao concluir, baixe o artefato `Persona-Windows-<número>`, extraia
    o ZIP e execute o `*-setup.exe`. Artefatos ficam disponíveis por 14 dias.
 2. Se instalou o antigo **Persona Companion 0.1**, encerre-o pela bandeja antes
@@ -112,13 +150,18 @@ npm ci
 npm test
 cargo test --locked --manifest-path companion/src-tauri/Cargo.toml
 npm run desktop:dev
-# instalador:
+# pasta portátil sem instalador:
+npm run desktop:portable
+# instalador tradicional:
 npm run desktop:build -- --bundles nsis
 ```
 
-Saída: `companion/src-tauri/target/release/bundle/nsis/*-setup.exe`.
-O workflow [Windows Persona installer](../.github/workflows/windows-companion.yml)
-executa os testes JS/Rust e gera esse instalador. Para distribuí-lo por link,
+Saída portátil: `companion/src-tauri/target/portable/`.
+Saída NSIS: `companion/src-tauri/target/release/bundle/nsis/*-setup.exe`.
+O empacotador `npm run desktop:package-portable` também pode ser executado
+separadamente após um build de produção já concluído.
+O workflow [Windows Persona (portable + installer)](../.github/workflows/windows-companion.yml)
+executa os testes JS/Rust e gera os dois artefatos. Para distribuí-lo por link,
 crie uma Release com uma tag como `persona-v0.2.1`, anexe **somente o instalador**
 do artefato da mesma revisão e publique. Ele ficará em **Releases → Assets**.
 O workflow não publica Releases automaticamente.
@@ -143,7 +186,8 @@ a entrega de notificações ou o comportamento de janelas reais no Windows.
 
 ### Roteiro no PC
 
-1. Encerre o companion antigo, instale esta versão e abra somente **Persona**.
+1. Encerre o companion antigo e abra esta versão pelo instalador ou por
+   `Persona.exe` na pasta portátil extraída, usando uma conta sem elevação.
    Vincule uma cópia do seu banco. Cadastre, edite, planeje e conclua uma ação;
    confira o JSON e o overlay. Saia e abra novamente: os dados devem persistir.
 2. Feche a janela principal. Confira o painel e reabra o Persona por ele ou pela
