@@ -22,15 +22,25 @@ usando Document Picture-in-Picture, sem instalar ou executar um `.exe`.
 
 - Arraste a **barra de título do navegador** para posicionar o painel e use as
   bordas para redimensioná-lo; o tamanho e a posição são controlados pelo Chrome.
-- O painel mostra o plano do dia por Manhã, Tarde e Se sobrar tempo, com duração,
-  conclusão da ação e estado da demanda. Edições, conclusões, importação do banco
-  e a mudança de data local atualizam o painel enquanto o Persona estiver aberto.
-- Os cartões têm cores suaves em repouso e ficam destacados ao passar o mouse.
-  A janela tem **fundo opaco**; o site não pode torná-la transparente sobre o
-  desktop. Ela é somente leitura: **Voltar ao Persona** abre Hoje para editar.
-- **Fechar painel** ou o X da janela fecha somente o painel. O mesmo botão no
-  Persona permite reabri-lo; clicar novamente com ele aberto apenas o traz à
-  frente. Fechar ou recarregar a guia/PWA principal também fecha o painel.
+- O painel abre no **modo Foco**: faixa escura e compacta, com uma atividade,
+  duração, contador `1/3` e **Anterior/Próxima**. A primeira ação pendente é
+  selecionada ao abrir. Navegar não altera nem conclui atividades.
+- **Lista** expande o plano completo por Manhã, Tarde e Se sobrar tempo. Clique
+  numa atividade para colocá-la em foco e recolher; **Foco** também recolhe.
+  No Chrome compatível, a janela acompanha a expansão/recolhimento. O navegador
+  pode impor tamanho mínimo; você pode ajustar as bordas manualmente.
+- O tamanho inicial solicitado é 320 × 112 px, além da barra do Chrome, sem data,
+  rodapé ou botões grandes no modo Foco. O fundo é escuro e uniforme, com texto
+  discreto que fica mais claro ao passar o mouse. A janela continua **opaca**.
+  Textos longos têm reticências; passe o mouse sobre o título ou abra a Lista
+  para ler por inteiro.
+- Edições, conclusões, importação do banco e a mudança de data local atualizam o
+  painel. A seleção é mantida quando possível; ao concluir a ação em foco no
+  Persona, o painel avança para outra pendente. A conclusão continua na tela
+  principal. **Persona**, na faixa, traz a tela Hoje de volta.
+- O **X do Chrome** fecha somente o painel; o modo Lista também tem **Fechar
+  painel**. O botão no Persona permite reabri-lo; com ele já aberto, apenas o
+  traz à frente. Fechar ou recarregar a guia/PWA principal fecha o painel.
 - Precisa de HTTPS (ou localhost) e de suporte do Chrome/Edge à API. Se o recurso
   estiver ausente ou bloqueado pela empresa, o Persona informa isso. Não há
   executável auxiliar nem mudança de configuração de segurança do Windows.

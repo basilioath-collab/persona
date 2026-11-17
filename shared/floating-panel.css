@@ -1,12 +1,13 @@
-:root{font-family:Segoe UI,Arial,sans-serif;color:#23312b;background:#f2f5ef;font-size:13px;color-scheme:light}
-*{box-sizing:border-box}body{margin:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#111920;color:#a1afaa}
-.brand{color:#9bf12f;font-size:10px;font-weight:800;letter-spacing:2px}h1{color:#f1f5ee;font-size:21px;letter-spacing:0;margin:4px 0 0}.date{font-size:11px}
-.summary{margin:0;padding:10px 16px 0;color:#647268;font-size:12px}.toolbar{display:flex;gap:8px;padding:12px 16px}
-button{font:inherit;font-size:12px;border:1px solid #8ecb37;background:#9bf12f;color:#19261b;border-radius:7px;padding:8px 10px;cursor:pointer;font-weight:600}
-button.secondary{background:#f8faf6;border-color:#d4ddce;color:#52614f}button:hover{filter:brightness(.96)}button:focus-visible{outline:3px solid #526e35;outline-offset:2px}
-main{flex:1;min-height:0;overflow:auto;padding:0 12px 12px}section+section{margin-top:16px}h2{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#697960;margin:8px 4px}
-.item{display:flex;align-items:start;gap:12px;padding:11px;margin-top:7px;background:#e9eee4;border:1px solid #dce4d7;border-radius:9px;transition:background-color .15s,border-color .15s,color .15s;color:#607058}
-.item:hover{background:#fff;border-color:#91c849;color:#1e3020}.copy{flex:1;min-width:0}.copy b{display:block;font-size:13px;line-height:1.4;overflow-wrap:anywhere}.copy small{display:block;font-size:11px;line-height:1.4;margin-top:5px;color:#76816f}.copy .state{font-size:10px}.done .copy b{text-decoration:line-through}.done{background:#f0f3ed}.duration{white-space:nowrap;font-size:11px;font-weight:700;color:#5b7147;padding-top:3px}
-footer{border-top:1px solid #dce4d7;padding:9px 14px;color:#7b8771;font-size:10px;line-height:1.4}.empty{color:#78846e;line-height:1.6;padding:15px 4px}
-@media(prefers-reduced-motion:reduce){.item{transition:none}}
+:root{font-family:Segoe UI,Arial,sans-serif;color:#a0aca5;background:#111920;font-size:12px;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;display:flex;flex-direction:column;height:100vh;overflow:hidden;background:#111920}
+header{display:flex;align-items:center;gap:10px;flex-shrink:0;padding:6px 10px 2px;min-height:27px}
+.brand{flex:1;white-space:nowrap;color:#91b85d;font-size:10px;font-weight:700;letter-spacing:1px}.counter{color:#a4b09e;font-size:11px;font-variant-numeric:tabular-nums}
+button{font:inherit;color:#83918a;background:transparent;border:0;border-radius:4px;padding:4px 5px;cursor:pointer;line-height:1.25}
+button:hover{background:#202d34;color:#e7f0e9}button:focus-visible{outline:2px solid #9bf12f;outline-offset:1px}button:disabled{opacity:.3;cursor:default;background:transparent}.expand{font-size:10px;padding:3px 5px}
+.focus-row{display:flex;align-items:center;gap:10px;flex:1;min-height:25px;padding:4px 10px;color:#a8b5ac;transition:color .15s}
+.focus-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500}.duration{white-space:nowrap;color:#829673;font-size:11px;font-variant-numeric:tabular-nums}.focus-row.done .focus-title{text-decoration:line-through}
+.navigation{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-shrink:0;padding:1px 5px 5px}.navigation button{font-size:11px}.return-persona{font-size:10px!important;color:#64766c}
+body:hover .focus-row,body:has(:focus-visible) .focus-row{color:#edf4ef}body:hover .duration{color:#b1d38a}
+.summary,.toolbar,main{display:none}.expanded .focus-row,.expanded .navigation{display:none}.expanded .summary{display:block;margin:0;padding:6px 10px;color:#809081;font-size:11px}.expanded .toolbar{display:flex;gap:8px;padding:0 5px 5px}.expanded main{display:block;flex:1;min-height:0;overflow:auto;padding:0 8px 8px}
+section+section{margin-top:10px}h2{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#789064;margin:7px 2px}.item{display:flex;width:100%;text-align:left;align-items:start;gap:10px;padding:8px;margin-top:5px;border:1px solid #25332c;border-radius:6px;color:#a4b0a3;background:#152027}.item:hover,.item[aria-current]{border-color:#667f45;background:#1c2b2d;color:#edf4ef}.copy{flex:1;min-width:0}.copy b{display:block;font-size:12px;font-weight:500;line-height:1.4;overflow-wrap:anywhere}.copy small{display:block;font-size:10px;line-height:1.4;margin-top:4px;color:#718474}.copy .state{font-size:9px}.done .copy b{text-decoration:line-through}.empty{font-size:11px;font-weight:400;color:#81917f;line-height:1.4;margin:0;overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){.focus-row{transition:none}}
