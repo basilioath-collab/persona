@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 const repo = new URL('../', import.meta.url);
 // An explicit allowlist prevents personal JSON files from entering the installer.
-const personaFiles = ['index.html', 'shared/today.js', 'shared/desktop.js', 'manifest.webmanifest', 'icons/persona.svg', 'icons/persona-maskable.svg'];
+const personaFiles = ['index.html', 'shared/today.js', 'shared/desktop.js', 'shared/floating-panel.js', 'shared/floating-panel.css', 'manifest.webmanifest', 'icons/persona.svg', 'icons/persona-maskable.svg'];
 function personaApp() {
   return {
     name: 'bundled-persona',
@@ -11,7 +11,7 @@ function personaApp() {
       server.middlewares.use((req, res, next) => {
         const file = req.url?.split('?')[0].replace(/^\/persona\//, '');
         if (!req.url?.startsWith('/persona/') || !personaFiles.includes(file)) return next();
-        res.setHeader('Content-Type', file.endsWith('.html') ? 'text/html' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.svg') ? 'image/svg+xml' : 'application/manifest+json');
+        res.setHeader('Content-Type', file.endsWith('.html') ? 'text/html' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : file.endsWith('.svg') ? 'image/svg+xml' : 'application/manifest+json');
         res.end(readFileSync(new URL(file, repo)));
       });
     },

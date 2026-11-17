@@ -13,6 +13,39 @@ Abra `http://localhost:8000`. Os dados são gravados automaticamente no
 `localStorage` do navegador. Use **Configurações > Exportar banco** para manter
 uma cópia de segurança.
 
+## Painel flutuante no Chrome — sem executável
+
+Acesse **https://basilioath-collab.github.io/persona/** no Chrome/Edge de desktop
+ou abra a PWA já instalada. Clique em **Abrir painel flutuante**, no topo do
+Persona. O navegador abre uma janela de Hoje que permanece sobre outras janelas,
+usando Document Picture-in-Picture, sem instalar ou executar um `.exe`.
+
+- Arraste a **barra de título do navegador** para posicionar o painel e use as
+  bordas para redimensioná-lo; o tamanho e a posição são controlados pelo Chrome.
+- O painel mostra o plano do dia por Manhã, Tarde e Se sobrar tempo, com duração,
+  conclusão da ação e estado da demanda. Edições, conclusões, importação do banco
+  e a mudança de data local atualizam o painel enquanto o Persona estiver aberto.
+- Os cartões têm cores suaves em repouso e ficam destacados ao passar o mouse.
+  A janela tem **fundo opaco**; o site não pode torná-la transparente sobre o
+  desktop. Ela é somente leitura: **Voltar ao Persona** abre Hoje para editar.
+- **Fechar painel** ou o X da janela fecha somente o painel. O mesmo botão no
+  Persona permite reabri-lo; clicar novamente com ele aberto apenas o traz à
+  frente. Fechar ou recarregar a guia/PWA principal também fecha o painel.
+- Precisa de HTTPS (ou localhost) e de suporte do Chrome/Edge à API. Se o recurso
+  estiver ausente ou bloqueado pela empresa, o Persona informa isso. Não há
+  executável auxiliar nem mudança de configuração de segurança do Windows.
+
+O Persona/Chrome precisa continuar rodando. Alertas nativos com o navegador
+fechado e transparência real sobre o desktop continuam sendo recursos da versão
+Windows. Se o botão ainda não aparecer após uma atualização do site, recarregue
+com **Ctrl+Shift+R**; não é necessário apagar os dados do navegador.
+
+Para testar a integração real no Chromium, execute `npm run test:floating`
+(com Python 3 e Chromium disponíveis). O teste abre a janela PiP real, compara com
+Hoje, edita/conclui ações, verifica mudança do dia, fechamento/reabertura, estilos
+offline e mensagens para API ausente ou bloqueada. `npm run test:browser` inclui
+essas verificações e a regressão da PWA e do aplicativo Windows.
+
 ## Instalar no computador
 
 Abra o Persona pelo Chrome ou Edge e clique em **Instalar no PC**, no topo da

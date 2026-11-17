@@ -122,6 +122,7 @@ async function ready(url) {
     await desktop.waitForSelector('.tomorrow-item');
     assert.equal(await desktop.locator('.day-plan .tomorrow-item').count(),4);
     assert.equal(await desktop.locator('#installAppBtn').isVisible(),false);
+    assert.equal(await desktop.locator('#floatingPanelBtn').isVisible(),false);
     if(process.env.PERSONA_DESKTOP_SCREENSHOT)await desktop.screenshot({path:process.env.PERSONA_DESKTOP_SCREENSHOT});
     await desktop.locator('#desktopOverlay').click();
     assert.equal(await desktop.evaluate(()=>window.overlayRequests),1);

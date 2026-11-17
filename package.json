@@ -6,12 +6,13 @@
     "dev": "vite --config companion/vite.config.mjs",
     "build": "vite build --config companion/vite.config.mjs",
     "test": "node --test tests/*.test.cjs",
-    "test:browser": "node tests/browser.cjs",
+    "test:browser": "node tests/browser.cjs && node tests/floating-browser.cjs",
     "tauri": "tauri",
     "desktop:dev": "cd companion && tauri dev",
     "desktop:build": "cd companion && tauri build",
     "desktop:portable": "npm run desktop:build -- --no-bundle -- --locked && npm run desktop:package-portable",
-    "desktop:package-portable": "node scripts/package-portable.mjs"
+    "desktop:package-portable": "node scripts/package-portable.mjs",
+    "test:floating": "node tests/floating-browser.cjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.10.0",
